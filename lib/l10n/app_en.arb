@@ -1,0 +1,13 @@
+{
+    "loginTitle": "Login",
+    "emailHint": "Email",
+    "passwordHint": "Password",
+    "loginButton": "Login",
+    "forgotPassword": "Forgot Password?",
+    "orText": "OR",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithApple": "Continue with Apple",
+    "dontHaveAccount": "Don't have an account?",
+    "signUp": "Sign Up",
+    "@@locale": "en"
+} 

@@ -1,0 +1,13 @@
+{
+    "loginTitle": "Đăng nhập",
+    "emailHint": "Email",
+    "passwordHint": "Mật khẩu",
+    "loginButton": "Đăng nhập",
+    "forgotPassword": "Quên mật khẩu?",
+    "orText": "HOẶC",
+    "continueWithGoogle": "Tiếp tục với Google",
+    "continueWithApple": "Tiếp tục với Apple",
+    "dontHaveAccount": "Chưa có tài khoản?",
+    "signUp": "Đăng ký",
+    "@@locale": "vi"
+} 
