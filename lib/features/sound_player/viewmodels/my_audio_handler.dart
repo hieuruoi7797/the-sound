@@ -1,9 +1,21 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final audioHandlerProvider = Provider<Future<MyAudioHandler>>((ref) async {
+  return await AudioService.init(
+    builder: () => MyAudioHandler(),
+    config: const AudioServiceConfig(
+      androidNotificationChannelId: 'com.splat.mytune.channel.audio',
+      androidNotificationChannelName: 'Audio playback',
+      androidNotificationOngoing: true,
+    ),
+  );
+});
 
 class MyAudioHandler extends BaseAudioHandler with SeekHandler {
-  final _player = AudioPlayer();
+  AudioPlayer player = AudioPlayer();
 
   MyAudioHandler() {
     _init();
@@ -12,7 +24,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> _init() async {
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
-    _player.playerStateStream.listen((playerState) {
+    player.playerStateStream.listen((playerState) {
       playbackState.add(playbackState.value.copyWith(
         playing: playerState.playing,
         processingState: {
@@ -24,7 +36,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
         }[playerState.processingState]!,
       ));
     });
-    _player.positionStream.listen((position) {
+    player.positionStream.listen((position) {
       playbackState.add(playbackState.value.copyWith(
         updatePosition: position,
       ));
@@ -32,25 +44,25 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   Future<void> playMedia(String url, {String? title, String? artUri}) async {
-    await _player.setUrl(url);
+    await player.setUrl(url);
     mediaItem.add(MediaItem(
       id: url,
       title: title ?? 'Audio',
       artUri: artUri != null ? Uri.parse(artUri) : null,
-      duration: _player.duration,
+      duration: player.duration,
     ));
-    play();
+    await play();
   }
 
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() => player.play();
 
   @override
-  Future<void> pause() => _player.pause();
+  Future<void> pause() => player.pause();
 
   @override
-  Future<void> stop() => _player.stop();
+  Future<void> stop() => player.stop();
 
   @override
-  Future<void> seek(Duration position) => _player.seek(position);
+  Future<void> seek(Duration position) => player.seek(position);
 }

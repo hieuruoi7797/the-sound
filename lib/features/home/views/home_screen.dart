@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mvvm_app/features/navigator/viewmodels/navigator_view_model.dart';
-import 'package:flutter_mvvm_app/features/sound_player/sound_player_ui.dart';
+import 'package:flutter_mvvm_app/features/sound_player/views/sound_player_ui.dart';
+import 'package:flutter_mvvm_app/features/sound_player/viewmodels/soundplayer_view_model.dart';
 import '../widgets/environment_scan_banner.dart';
 import '../widgets/noise_type_card.dart';
 import '../widgets/daily_mode_card.dart';
@@ -190,16 +190,14 @@ class HomeScreen extends ConsumerWidget {
             ),
             if (soundPlayerState.showPlayer)
               SoundPlayerUI(
-                audioName: soundPlayerState.audioName ?? '',
-                imageUrl: soundPlayerState.imageUrl ?? '',
                 currentTime: soundPlayerState.currentTime,
-                totalDuration: soundPlayerState.totalDuration,
                 isPlaying: soundPlayerState.isPlaying,
                 onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
                 onLike: () => ref.read(soundPlayerProvider.notifier).like(),
                 onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
                 onTimer: () => ref.read(soundPlayerProvider.notifier).setTimer(const Duration(minutes: 10)),
-                onQueue: () {},
+                onQueue: () {}, 
+                sound: soundPlayerState.sound, totalDuration: soundPlayerState.totalDuration,
               ),
           ],
         ),

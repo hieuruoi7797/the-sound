@@ -1,29 +1,27 @@
 import 'package:flutter/material.dart';
+import '../models/sound_model.dart';
 
 class SoundPlayerUI extends StatelessWidget {
-  final String audioName;
-  final String imageUrl;
+  final SoundModel? sound;
   final Duration currentTime;
-  final Duration totalDuration;
   final bool isPlaying;
   final VoidCallback onCollapse;
   final VoidCallback onLike;
   final VoidCallback onPlayPause;
   final VoidCallback onTimer;
   final VoidCallback onQueue;
-
+  final Duration totalDuration;
   const SoundPlayerUI({
     super.key,
-    required this.audioName,
-    required this.imageUrl,
+    this.sound,
     required this.currentTime,
-    required this.totalDuration,
     required this.isPlaying,
     required this.onCollapse,
     required this.onLike,
     required this.onPlayPause,
     required this.onTimer,
     required this.onQueue,
+    required this.totalDuration,
   });
 
   @override
@@ -72,7 +70,7 @@ class SoundPlayerUI extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: Text(
-                    audioName,
+                    sound?.audioName ?? '',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -81,10 +79,20 @@ class SoundPlayerUI extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                 ),
+                // Description
+                if (sound?.description.isNotEmpty ?? false)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                    child: Text(
+                      sound?.description ?? '',
+                      style: const TextStyle(color: Colors.white70, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 // Circular avatar
                 CircleAvatar(
                   radius: 120,
-                  backgroundImage: NetworkImage(imageUrl),
+                  backgroundImage: NetworkImage(sound?.imageUrl ?? ''),
                 ),
                 const SizedBox(height: 40),
                 // Progress bar
@@ -104,7 +112,7 @@ class SoundPlayerUI extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(_formatDuration(currentTime), style: const TextStyle(color: Colors.white70)),
-                          Text(_formatDuration(totalDuration), style: const TextStyle(color: Colors.white70)),
+                          Text(_formatDuration(totalDuration ?? Duration.zero), style: const TextStyle(color: Colors.white70)),
                         ],
                       ),
                     ],

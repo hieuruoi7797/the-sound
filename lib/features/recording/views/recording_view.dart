@@ -41,10 +41,10 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text('OK'),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
+            );
         setState(() { isScanning = false; });
         return;
       }
@@ -136,7 +136,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
           ),
         ),
       ),
-    );
+          );
   }
 }
 
