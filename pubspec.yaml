@@ -38,7 +38,11 @@ dependencies:
   intl: any
   google_fonts: ^6.1.0
   flutter_svg: ^2.0.9
-
+  firebase_database: ^10.5.7
+  firebase_core: ^2.25.4
+  just_audio: ^0.9.36
+  audio_service: ^0.18.12
+  audio_session: ^0.1.16
 dev_dependencies:
   flutter_test:
     sdk: flutter

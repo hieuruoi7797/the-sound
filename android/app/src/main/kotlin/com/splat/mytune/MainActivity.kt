@@ -1,24 +1,28 @@
-package com.example.flutter_mvvm_app
+package com.splat.mytune
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugins.GeneratedPluginRegistrant
 
 class MainActivity: FlutterActivity() {
     private lateinit var recordingHandler: RecordingHandler
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        GeneratedPluginRegistrant.registerWith(flutterEngine)
+
         
         recordingHandler = RecordingHandler(this)
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.flutter_mvvm_app/recording")
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.splat.mytune/recording")
             .setMethodCallHandler { call, result ->
                 recordingHandler.onMethodCall(result, call.method)
             }
 
-        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.flutter_mvvm_app/frequency")
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "com.splat.mytune/frequency")
             .setStreamHandler(object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                     recordingHandler.onListen(events)

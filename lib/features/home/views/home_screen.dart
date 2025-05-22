@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mvvm_app/features/navigator/viewmodels/navigator_view_model.dart';
+import 'package:flutter_mvvm_app/features/sound_player/sound_player_ui.dart';
 import '../widgets/environment_scan_banner.dart';
 import '../widgets/noise_type_card.dart';
 import '../widgets/daily_mode_card.dart';
 import '../widgets/top_pick_card.dart';
 import '../widgets/mini_player.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+ 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final soundPlayerState = ref.watch(soundPlayerProvider);
     return Scaffold(
       backgroundColor: const Color(0xFF141318),
       body: SafeArea(
@@ -54,19 +59,9 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Environment Scan Banner
-                  EnvironmentScanBanner(
-                  ),
+                  EnvironmentScanBanner(),
 
                   // Colored Noise List
-                  const Text(
-                    'Colored Noise',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   SizedBox(
                     height: 120,
                     child: ListView(
@@ -184,15 +179,28 @@ class HomeScreen extends StatelessWidget {
                 title: 'Ocean Waves',
                 artist: 'Nature Sounds',
                 imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-                isPlaying: true,
+                isPlaying: soundPlayerState.isPlaying,
                 onPlayPause: () {
-                  // Handle play/pause
+                  ref.read(soundPlayerProvider.notifier).togglePlayPause();
                 },
                 onTap: () {
-                  // Navigate to full player
+                  ref.read(soundPlayerProvider.notifier).showPlayer();
                 },
               ),
             ),
+            if (soundPlayerState.showPlayer)
+              SoundPlayerUI(
+                audioName: soundPlayerState.audioName ?? '',
+                imageUrl: soundPlayerState.imageUrl ?? '',
+                currentTime: soundPlayerState.currentTime,
+                totalDuration: soundPlayerState.totalDuration,
+                isPlaying: soundPlayerState.isPlaying,
+                onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
+                onLike: () => ref.read(soundPlayerProvider.notifier).like(),
+                onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
+                onTimer: () => ref.read(soundPlayerProvider.notifier).setTimer(const Duration(minutes: 10)),
+                onQueue: () {},
+              ),
           ],
         ),
       ),

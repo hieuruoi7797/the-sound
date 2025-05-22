@@ -4,11 +4,12 @@ import AVFoundation
 import Accelerate
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
   var audioRecorder: AVAudioRecorder?
   var audioEngine: AVAudioEngine?
   var methodChannel: FlutterMethodChannel?
   var isRecording: Bool = false
+  var eventSink: FlutterEventSink?
 
   override func application(
     _ application: UIApplication,
@@ -17,7 +18,7 @@ import Accelerate
     GeneratedPluginRegistrant.register(with: self)
 
     let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-    let channel = FlutterMethodChannel(name: "com.example.flutter_mvvm_app/recording",
+    let channel = FlutterMethodChannel(name: "com.splat.mytune/recording",
                                       binaryMessenger: controller.binaryMessenger)
     self.methodChannel = channel
     channel.setMethodCallHandler({ [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
@@ -40,7 +41,22 @@ import Accelerate
       }
     })
 
+    // Set up EventChannel for frequency streaming
+    let eventChannel = FlutterEventChannel(name: "com.splat.mytune/frequency", binaryMessenger: controller.binaryMessenger)
+    eventChannel.setStreamHandler(self)
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // FlutterStreamHandler methods
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    self.eventSink = events
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    self.eventSink = nil
+    return nil
   }
 
   private func startAudioEngine(result: @escaping FlutterResult) {
@@ -56,8 +72,9 @@ import Accelerate
       inputNode.installTap(onBus: bus, bufferSize: bufferSize, format: inputFormat) { [weak self] (buffer, time) in
         guard let self = self else { return }
         if let freq = self.extractFrequency(from: buffer, sampleRate: Float(inputFormat.sampleRate)) {
+              print("Extracted frequency: \(freq)")
           DispatchQueue.main.async {
-            self.methodChannel?.invokeMethod("listen", arguments: freq)
+            self.eventSink?(freq)
           }
         }
       }
@@ -79,34 +96,33 @@ import Accelerate
     result(true)
   }
 
-  private func extractFrequency(from buffer: AVAudioPCMBuffer, sampleRate: Float) -> Double? {
+ private func extractFrequency(from buffer: AVAudioPCMBuffer, sampleRate: Float) -> Double? {
     guard let channelData = buffer.floatChannelData?[0] else { return nil }
     let frameLength = Int(buffer.frameLength)
-    var window = [Float](repeating: 0, count: frameLength)
-    vDSP_hann_window(&window, vDSP_Length(frameLength), Int32(vDSP_HANN_NORM))
-    var samples = [Float](repeating: 0, count: frameLength)
-    vDSP_vmul(channelData, 1, window, 1, &samples, 1, vDSP_Length(frameLength))
+    let log2n = UInt(round(log2(Double(frameLength))))
+    let fftSetup = vDSP_create_fftsetup(log2n, Int32(kFFTRadix2))
     var realp = [Float](repeating: 0, count: frameLength/2)
     var imagp = [Float](repeating: 0, count: frameLength/2)
     var output = DSPSplitComplex(realp: &realp, imagp: &imagp)
-    samples.withUnsafeBufferPointer { pointer in
-      pointer.baseAddress!.withMemoryRebound(to: DSPComplex.self, capacity: frameLength) { typeConvertedTransferBuffer in
-        let log2n = vDSP_Length(log2(Float(frameLength)))
-        let fftSetup = vDSP_create_fftsetup(log2n, Int32(kFFTRadix2))
+    channelData.withMemoryRebound(to: DSPComplex.self, capacity: frameLength) { typeConvertedTransferBuffer in
         vDSP_ctoz(typeConvertedTransferBuffer, 2, &output, 1, vDSP_Length(frameLength/2))
-        vDSP_fft_zrip(fftSetup!, &output, 1, log2n, Int32(FFT_FORWARD))
-        var magnitudes = [Float](repeating: 0.0, count: frameLength/2)
-        vDSP_zvmags(&output, 1, &magnitudes, 1, vDSP_Length(frameLength/2))
-        var maxMag: Float = 0
-        var maxIndex: vDSP_Length = 0
-        vDSP_maxvi(magnitudes, 1, &maxMag, &maxIndex, vDSP_Length(frameLength/2))
-        vDSP_destroy_fftsetup(fftSetup)
-        let bin = Double(maxIndex)
-        let freq = bin * Double(sampleRate) / Double(frameLength)
-        return freq
-      }
     }
-    // fallback if FFT fails
-    return nil
-  }
+    vDSP_fft_zrip(fftSetup!, &output, 1, log2n, Int32(FFT_FORWARD))
+    var magnitudes = [Float](repeating: 0.0, count: frameLength/2)
+    vDSP_zvmags(&output, 1, &magnitudes, 1, vDSP_Length(frameLength/2))
+    var maxMag: Float = 0
+    var maxIndex: vDSP_Length = 0
+    // Skip the first few bins to avoid DC component
+    let searchRange = 1..<magnitudes.count
+    for i in searchRange {
+        if magnitudes[i] > maxMag {
+            maxMag = magnitudes[i]
+            maxIndex = vDSP_Length(i)
+        }
+    }
+    vDSP_destroy_fftsetup(fftSetup)
+    let bin = Double(maxIndex)
+    let freq = bin * Double(sampleRate) / Double(frameLength)
+    return freq
+}
 }

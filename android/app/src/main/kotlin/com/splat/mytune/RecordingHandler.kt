@@ -1,4 +1,4 @@
-package com.example.flutter_mvvm_app
+package com.splat.mytune
 
 import android.Manifest
 import android.app.Activity

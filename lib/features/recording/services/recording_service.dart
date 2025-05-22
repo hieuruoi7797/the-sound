@@ -1,8 +1,8 @@
 import 'package:flutter/services.dart';
 
 class RecordingService {
-  static const platform = MethodChannel('com.example.flutter_mvvm_app/recording');
-  static const eventChannel = EventChannel('com.example.flutter_mvvm_app/frequency');
+  static const platform = MethodChannel('com.splat.mytune/recording');
+  static const eventChannel = EventChannel('com.splat.mytune/frequency');
 
   Future<bool> requestPermission() async {
     try {
