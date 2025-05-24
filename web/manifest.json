@@ -1,6 +1,6 @@
 {
-    "name": "flutter_mvvm_app",
-    "short_name": "flutter_mvvm_app",
+    "name": "mytune",
+    "short_name": "mytune",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

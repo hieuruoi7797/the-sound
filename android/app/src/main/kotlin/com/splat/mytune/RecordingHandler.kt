@@ -9,6 +9,7 @@ import android.media.MediaRecorder
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.*
 import kotlin.math.abs
@@ -26,13 +27,13 @@ class RecordingHandler(private val activity: Activity) {
         private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     }
 
-    fun onMethodCall(call: MethodChannel.Result, method: String) {
-        when (method) {
-            "requestPermission" -> checkPermission(call)
-            "checkPermissionStatus" -> checkPermissionStatus(call)
-            "startRecording" -> startRecording(call)
-            "stopRecording" -> stopRecording(call)
-            else -> call.notImplemented()
+    fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        when (call.method) {
+            "requestPermission" -> checkPermission(result)
+            "checkPermissionStatus" -> checkPermissionStatus(result)
+            "startRecording" -> startRecording(result)
+            "stopRecording" -> stopRecording(result)
+            else -> result.notImplemented()
         }
     }
 

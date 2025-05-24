@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mvvm_app/features/navigator/widgets/dark_scaffold.dart';
+import 'package:mytune/features/navigator/widgets/dark_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodels/recording_view_model.dart';
-import 'dart:math';
 import 'dart:async';
 
 class RecordingView extends ConsumerStatefulWidget {

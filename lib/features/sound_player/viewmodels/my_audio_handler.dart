@@ -51,7 +51,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
       artUri: artUri != null ? Uri.parse(artUri) : null,
       duration: player.duration,
     ));
-    await play();
+    play();
   }
 
   @override

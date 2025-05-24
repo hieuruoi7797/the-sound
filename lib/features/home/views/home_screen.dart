@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mvvm_app/features/sound_player/views/sound_player_ui.dart';
-import 'package:flutter_mvvm_app/features/sound_player/viewmodels/soundplayer_view_model.dart';
+import 'package:mytune/features/sound_player/views/sound_player_ui.dart';
+import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
 import '../widgets/environment_scan_banner.dart';
 import '../widgets/noise_type_card.dart';
 import '../widgets/daily_mode_card.dart';
@@ -59,7 +59,7 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
 
                   // Environment Scan Banner
-                  EnvironmentScanBanner(),
+                  const EnvironmentScanBanner(),
 
                   // Colored Noise List
                   SizedBox(
@@ -144,20 +144,21 @@ class HomeScreen extends ConsumerWidget {
                     height: MediaQuery.of(context).size.height * 0.14,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      children: const [
+                      children: [
                         TopPickCard(
+                          onTap: () => ref.read(soundPlayerProvider.notifier).showPlayer(),
                           title: 'Ocean Waves',
                           artist: 'Nature Sounds',
                           imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
                           playCount: 1250000,
                         ),
-                        TopPickCard(
+                        const TopPickCard(
                           title: 'Rain Forest',
                           artist: 'Ambient Nature',
                           imageUrl: 'https://images.unsplash.com/photo-1511497584788-876760111969',
                           playCount: 890000,
                         ),
-                        TopPickCard(
+                        const TopPickCard(
                           title: 'White Noise',
                           artist: 'Sleep Sounds',
                           imageUrl: 'https://images.unsplash.com/photo-1511295742362-92c96b1cf484',
@@ -171,23 +172,24 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             // Mini Player
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: MiniPlayer(
-                title: 'Ocean Waves',
-                artist: 'Nature Sounds',
-                imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-                isPlaying: soundPlayerState.isPlaying,
-                onPlayPause: () {
-                  ref.read(soundPlayerProvider.notifier).togglePlayPause();
-                },
-                onTap: () {
-                  ref.read(soundPlayerProvider.notifier).showPlayer();
-                },
+            if (soundPlayerState.sound != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: MiniPlayer(
+                  title: soundPlayerState.sound?.audioName ?? '',
+                  artist: '',
+                  imageUrl: soundPlayerState.sound?.imageUrl ?? '',
+                  isPlaying: soundPlayerState.isPlaying,
+                  onPlayPause: () {
+                    ref.read(soundPlayerProvider.notifier).togglePlayPause();
+                  },
+                  onTap: () {
+                    ref.read(soundPlayerProvider.notifier).showPlayer();
+                  },
+                ),
               ),
-            ),
             if (soundPlayerState.showPlayer)
               SoundPlayerUI(
                 currentTime: soundPlayerState.currentTime,

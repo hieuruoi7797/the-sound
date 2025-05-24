@@ -1,5 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_mvvm_app/features/sound_player/models/sound_model.dart';
+import 'package:mytune/features/sound_player/models/sound_model.dart';
 
 class SoundRepository {
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref('sounds');

@@ -111,7 +111,7 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
 
   Future<bool> requestPermissionWithResult() async {
     try {
-      final hasPermission = await _service.requestPermission();
+      final hasPermission = await _service.checkPermissionStatus();
       if (state.value != null) {
         state = AsyncValue.data(state.value!.copyWith(
           hasPermission: hasPermission,

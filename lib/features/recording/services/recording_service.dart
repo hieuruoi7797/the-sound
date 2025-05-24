@@ -6,6 +6,7 @@ class RecordingService {
 
   Future<bool> requestPermission() async {
     try {
+      print("hieuttrequestPermission");
       final bool hasPermission = await platform.invokeMethod('requestPermission');
       return hasPermission;
     } on PlatformException catch (e) {
@@ -16,7 +17,9 @@ class RecordingService {
 
   Future<bool> checkPermissionStatus() async {
     try {
+      print("hieuttcheckPermissionStatus");
       final bool hasPermission = await platform.invokeMethod('checkPermissionStatus');
+      print("hieuttcheckPermissionStatus $hasPermission");
       return hasPermission;
     } on PlatformException catch (e) {
       print('Failed to check permission status: ${e.message}');

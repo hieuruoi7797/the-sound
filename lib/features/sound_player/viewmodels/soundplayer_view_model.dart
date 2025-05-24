@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter_mvvm_app/features/sound_player/viewmodels/my_audio_handler.dart';
+import 'package:mytune/features/sound_player/viewmodels/my_audio_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/sound_model.dart';
@@ -67,12 +67,14 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
       showPlayer: true,
       isPlaying: false,
     );
+    play();
     _listenToPosition();
     _listenToPlayerState();
   }
 
   void play() {
     state = state.copyWith(isPlaying: true);
+    audioHandler.play();
   }
 
   void pause() {
@@ -84,11 +86,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     if (state.isPlaying) {
       pause();
     } else {
-      if (state.sound != null) {
-      audioHandler.playMedia(
-        state.sound!.audioDirectUrl.isNotEmpty?state.sound!.audioDirectUrl: _googleDriveToDirect(state.sound!.googleDriveUrl),title: "AAA",artUri: state.sound!.imageUrl);
       play();
-      }
     }
   }
 
@@ -105,7 +103,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
 
   void collapse() {
     state = state.copyWith(showPlayer: false);
-    pause();
+    // pause();
   }
 
   void _listenToPosition() {
@@ -142,14 +140,14 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   }
 
   void showPlayer({SoundModel? sound}) {
-    setAudio(sound ?? SoundModel(
+    if (state.sound == null) {
+    setAudio(SoundModel(
       audioName: 'AAA', 
       imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e', 
       audioDirectUrl: '',
       googleDriveUrl: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
       description: ''));
-
-
+    }
     state = state.copyWith(showPlayer: true);
   }
 

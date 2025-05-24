@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_mvvm_app/core/constants/assets.dart';
-import 'package:flutter_mvvm_app/core/constants/colors.dart';
-import 'package:flutter_mvvm_app/core/constants/sizes.dart';
-import 'package:flutter_mvvm_app/core/constants/text_styles.dart';
-import 'package:flutter_mvvm_app/core/widgets/custom_button.dart';
-import 'package:flutter_mvvm_app/core/widgets/custom_text_field.dart';
-import 'package:flutter_mvvm_app/features/auth/widgets/social_button.dart';
-import 'package:flutter_mvvm_app/features/auth/widgets/social_divider.dart';
+import 'package:mytune/core/constants/assets.dart';
+import 'package:mytune/core/constants/colors.dart';
+import 'package:mytune/core/constants/sizes.dart';
+import 'package:mytune/core/constants/text_styles.dart';
+import 'package:mytune/core/widgets/custom_button.dart';
+import 'package:mytune/core/widgets/custom_text_field.dart';
+import 'package:mytune/features/auth/widgets/social_button.dart';
+import 'package:mytune/features/auth/widgets/social_divider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

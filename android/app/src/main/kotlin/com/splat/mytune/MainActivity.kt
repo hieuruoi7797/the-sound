@@ -1,25 +1,25 @@
 package com.splat.mytune
 
+import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 
-class MainActivity: FlutterActivity() {
+class MainActivity: AudioServiceActivity() {
     private lateinit var recordingHandler: RecordingHandler
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        GeneratedPluginRegistrant.registerWith(flutterEngine)
 
-        
         recordingHandler = RecordingHandler(this)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.splat.mytune/recording")
             .setMethodCallHandler { call, result ->
-                recordingHandler.onMethodCall(result, call.method)
+                print("hieuttcheckMETHOD")
+                recordingHandler.onMethodCall(call, result)
             }
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, "com.splat.mytune/frequency")

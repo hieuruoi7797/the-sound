@@ -112,7 +112,7 @@ class SoundPlayerUI extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(_formatDuration(currentTime), style: const TextStyle(color: Colors.white70)),
-                          Text(_formatDuration(totalDuration ?? Duration.zero), style: const TextStyle(color: Colors.white70)),
+                          Text(_formatDuration(totalDuration), style: const TextStyle(color: Colors.white70)),
                         ],
                       ),
                     ],

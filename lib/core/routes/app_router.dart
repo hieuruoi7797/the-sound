@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mvvm_app/features/recording/views/recording_view.dart';
+import 'package:mytune/features/recording/views/recording_view.dart';
 import '../../features/user/views/user_list_view.dart';
 import '../../features/navigator/views/app_navigator.dart';
 import 'route_names.dart';
