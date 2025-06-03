@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mytune/features/sound_player/models/sound_model.dart';
 import 'package:mytune/features/sound_player/views/sound_player_ui.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
 import '../widgets/environment_scan_banner.dart';
@@ -146,7 +147,14 @@ class HomeScreen extends ConsumerWidget {
                       scrollDirection: Axis.horizontal,
                       children: [
                         TopPickCard(
-                          onTap: () => ref.read(soundPlayerProvider.notifier).showPlayer(),
+                          onTap: () => ref.read(soundPlayerProvider.notifier).showPlayer(
+                            sound: SoundModel(
+                              audioName: 'AAA', 
+                              imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e', 
+                              audioDirectUrl: '',
+                              googleDriveUrl: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
+                              description: ''),
+                          ),
                           title: 'Ocean Waves',
                           artist: 'Nature Sounds',
                           imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
@@ -197,9 +205,9 @@ class HomeScreen extends ConsumerWidget {
                 onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
                 onLike: () => ref.read(soundPlayerProvider.notifier).like(),
                 onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
-                onTimer: () => ref.read(soundPlayerProvider.notifier).setTimer(const Duration(minutes: 10)),
+                // onTimer: () => ref.read(soundPlayerProvider.notifier).setTimer(const Duration(minutes: 10)),
                 onQueue: () {}, 
-                sound: soundPlayerState.sound, totalDuration: soundPlayerState.totalDuration,
+                sound: soundPlayerState.sound, totalDuration: soundPlayerState.timerDuration,
               ),
           ],
         ),

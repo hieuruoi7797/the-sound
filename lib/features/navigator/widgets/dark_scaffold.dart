@@ -20,7 +20,7 @@ class DarkScaffold extends StatelessWidget {
       backgroundColor: const Color(0xFF141318), // Dark background
       appBar: AppBar(
         title: Text(title),
-        backgroundColor: const Color(0xFF141318),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         actions: actions,
       ),

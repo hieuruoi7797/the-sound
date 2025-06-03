@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/sound_model.dart';
+import '../../timer/views/timer_setting_view.dart';
 
 class SoundPlayerUI extends StatelessWidget {
   final SoundModel? sound;
@@ -8,7 +9,7 @@ class SoundPlayerUI extends StatelessWidget {
   final VoidCallback onCollapse;
   final VoidCallback onLike;
   final VoidCallback onPlayPause;
-  final VoidCallback onTimer;
+  // final VoidCallback onTimer;
   final VoidCallback onQueue;
   final Duration totalDuration;
   const SoundPlayerUI({
@@ -19,7 +20,7 @@ class SoundPlayerUI extends StatelessWidget {
     required this.onCollapse,
     required this.onLike,
     required this.onPlayPause,
-    required this.onTimer,
+    // required this.onTimer,
     required this.onQueue,
     required this.totalDuration,
   });
@@ -96,53 +97,53 @@ class SoundPlayerUI extends StatelessWidget {
                 ),
                 const SizedBox(height: 40),
                 // Progress bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Column(
-                    children: [
-                      Slider(
-                        value: currentTime.inSeconds.toDouble(),
-                        min: 0,
-                        max: totalDuration.inSeconds.toDouble(),
-                        onChanged: (_) {}, // For display only
-                        activeColor: Colors.white,
-                        inactiveColor: Colors.white24,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(_formatDuration(currentTime), style: const TextStyle(color: Colors.white70)),
-                          Text(_formatDuration(totalDuration), style: const TextStyle(color: Colors.white70)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                //   child: Column(
+                //     children: [
+                //       Slider(
+                //         value: currentTime.inSeconds.toDouble(),
+                //         min: 0,
+                //         max: totalDuration.inSeconds.toDouble(),
+                //         onChanged: (_) {}, // For display only
+                //         activeColor: Colors.white,
+                //         inactiveColor: Colors.white24,
+                //       ),
+                //       Row(
+                //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //         children: [
+                //           Text(_formatDuration(currentTime), style: const TextStyle(color: Colors.white70)),
+                //           Text(_formatDuration(totalDuration), style: const TextStyle(color: Colors.white70)),
+                //         ],
+                //       ),
+                //     ],
+                //   ),
+                // ),
+                // const SizedBox(height: 32),
                 // Controller row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _circleButton(icon: Icons.timer, onTap: onTimer),
+                    _circleButton(
+                      icon: Icons.timer,
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (BuildContext context) {
+                            return const TimerSettingView();
+                          },
+                        );
+                        // Call the original onTimer callback if needed
+                        // onTimer.call();
+                      },
+                    ),
                     _circleButton(icon: isPlaying ? Icons.pause : Icons.play_arrow, onTap: onPlayPause),
                     _circleButton(icon: Icons.queue_music, onTap: onQueue),
                   ],
                 ),
                 const Spacer(),
-                // Home indicator
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: Center(
-                    child: Container(
-                      width: 120,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
-                  ),
-                ),
+               
               ],
             ),
           ],
@@ -168,8 +169,13 @@ class SoundPlayerUI extends StatelessWidget {
 
   String _formatDuration(Duration d) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final hours = twoDigits(d.inHours);
     final minutes = twoDigits(d.inMinutes.remainder(60));
     final seconds = twoDigits(d.inSeconds.remainder(60));
-    return '$minutes:$seconds';
+    if (d.inHours > 0) {
+      return '$hours:$minutes:$seconds';
+    } else {
+      return '$minutes:$seconds';
+    }
   }
 } 
