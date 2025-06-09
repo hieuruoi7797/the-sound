@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/recording_service.dart';
+import '../../../data/realtime_database_service.dart';
 
-final recordingServiceProvider = Provider((ref) => RecordingService());
+final recordingServiceProvider = Provider((ref) => RecordingService(ref.watch(realtimeDatabaseServiceProvider)));
+
+final realtimeDatabaseServiceProvider = Provider((ref) => RealtimeDatabaseService());
 
 final recordingViewModelProvider =
     StateNotifierProvider<RecordingViewModel, AsyncValue<RecordingState>>((ref) {
@@ -14,22 +17,26 @@ class RecordingState {
   final bool isRecording;
   final List<double> frequencies;
   final bool hasPermission;
+  final String? frequencyDescription;
 
   RecordingState({
     this.isRecording = false,
     this.frequencies = const [],
     this.hasPermission = false,
+    this.frequencyDescription,
   });
 
   RecordingState copyWith({
     bool? isRecording,
     List<double>? frequencies,
     bool? hasPermission,
+    String? frequencyDescription,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
       frequencies: frequencies ?? this.frequencies,
       hasPermission: hasPermission ?? this.hasPermission,
+      frequencyDescription: frequencyDescription ?? this.frequencyDescription,
     );
   }
 }
@@ -83,11 +90,22 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
       } else {
         await _service.stopRecording();
         await _frequencySubscription?.cancel();
+        if (currentState.frequencies.isNotEmpty) {
+          final avgFrequency = currentState.frequencies.reduce((a, b) => a + b) / currentState.frequencies.length;
+          final description = await _service.getFrequencyDescription(avgFrequency);
+          state = AsyncValue.data(currentState.copyWith(
+            isRecording: false,
+            frequencies: [],
+            frequencyDescription: description,
+          ));
+          return;
+        }
       }
 
       state = AsyncValue.data(currentState.copyWith(
         isRecording: !currentState.isRecording,
         frequencies: !currentState.isRecording ? [] : currentState.frequencies,
+        frequencyDescription: null,
       ));
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

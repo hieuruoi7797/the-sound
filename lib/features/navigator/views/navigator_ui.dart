@@ -35,8 +35,8 @@ class NavigatorUI extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(ref, 0, Icons.home, 'Home'),
-                _buildNavItem(ref, 1, Icons.smart_toy, 'AI Helper'),
-                _buildNavItem(ref, 2, Icons.music_note, 'My Tune'),
+                _buildNavItem(ref, 1, Icons.music_note, 'My Tune'),
+                _buildNavItem(ref, 2, Icons.smart_toy, 'Settings'),
               ],
             ),
           ),

@@ -186,7 +186,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                _SonicReadingCard(avgFrequency: avgFrequency!),
+                _SonicReadingCard(avgFrequency: avgFrequency!, frequencyDescription: recordingState.value?.frequencyDescription),
                 const SizedBox(height: 48.0),
                 Text(
                   'Recommended Tune',
@@ -352,8 +352,9 @@ class _ScanButton extends StatelessWidget {
 
 class _SonicReadingCard extends StatelessWidget {
   final double avgFrequency;
+  final String? frequencyDescription;
 
-  const _SonicReadingCard({required this.avgFrequency});
+  const _SonicReadingCard({required this.avgFrequency, this.frequencyDescription});
 
   String _getReadingText(double frequency) {
     if (frequency <= 500) {
@@ -398,7 +399,7 @@ class _SonicReadingCard extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            _getReadingText(avgFrequency),
+            frequencyDescription ?? _getReadingText(avgFrequency),
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 16,

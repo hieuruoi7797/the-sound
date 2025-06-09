@@ -18,7 +18,6 @@ class MainActivity: AudioServiceActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.splat.mytune/recording")
             .setMethodCallHandler { call, result ->
-                print("hieuttcheckMETHOD")
                 recordingHandler.onMethodCall(call, result)
             }
 
