@@ -5,23 +5,23 @@ import 'package:mytune/features/sound_player/models/sound_model.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class HomeState {
-  final List<SoundModel> topPicks;
+  final List<SoundModel> allSounds;
   final bool isLoading;
   final String? error;
 
   HomeState({
-    this.topPicks = const [],
+    this.allSounds = const [],
     this.isLoading = false,
     this.error,
   });
 
   HomeState copyWith({
-    List<SoundModel>? topPicks,
+    List<SoundModel>? allSounds,
     bool? isLoading,
     String? error,
   }) {
     return HomeState(
-      topPicks: topPicks ?? this.topPicks,
+      allSounds: allSounds ?? this.allSounds,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -52,12 +52,12 @@ class HomeViewModel extends StateNotifier<HomeState> {
         if (data is Map) {
           final systemSounds = SystemSoundsModel.fromJson(Map<String, dynamic>.from(data));
           print('[HomeViewModel] Parsed ${systemSounds.sounds.length} sounds from SystemSoundsModel');
-          state = state.copyWith(topPicks: systemSounds.sounds, isLoading: false, error: null);
+          state = state.copyWith(allSounds: systemSounds.sounds, isLoading: false, error: null);
         } else {
           print('[HomeViewModel] No valid data found.');
-          state = state.copyWith(topPicks: [], isLoading: false, error: null);
+          state = state.copyWith(allSounds: [], isLoading: false, error: null);
         }
-        print('[HomeViewModel] State updated: topPicks=${state.topPicks.length}, isLoading=${state.isLoading}, error=${state.error}');
+        print('[HomeViewModel] State updated: topPicks=${state.allSounds.length}, isLoading=${state.isLoading}, error=${state.error}');
       } catch (e) {
         print('[HomeViewModel] Error parsing data: $e');
         state = state.copyWith(isLoading: false, error: e.toString());
@@ -73,6 +73,15 @@ class HomeViewModel extends StateNotifier<HomeState> {
     _topPicksSub?.cancel();
     super.dispose();
   }
+
+  // Add getters for each mode's sound list
+  List<SoundModel> get sleepSounds => state.allSounds.where((s) => s.tags.contains(202)).toList();
+  List<SoundModel> get relaxSounds => state.allSounds.where((s) => s.tags.contains(303)).toList();
+  List<SoundModel> get meditateSounds => state.allSounds.where((s) => s.tags.contains(404)).toList();
+  List<SoundModel> get deepworkSounds => state.allSounds.where((s) => s.tags.contains(505)).toList();
+  List<SoundModel> get energyBoostSounds => state.allSounds.where((s) => s.tags.contains(606)).toList();
+  List<SoundModel> get stressReliefSounds => state.allSounds.where((s) => s.tags.contains(707)).toList();
+  List<SoundModel> get healingBodySounds => state.allSounds.where((s) => s.tags.contains(808)).toList();
 }
 
 class SystemSoundsModel {

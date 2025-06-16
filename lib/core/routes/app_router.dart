@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mytune/features/home/views/mode_sounds_screen.dart';
 import 'package:mytune/features/recording/views/recording_view.dart';
 import '../../features/user/views/user_list_view.dart';
 import '../../features/navigator/views/app_navigator.dart';
@@ -17,6 +18,14 @@ class AppRouter {
       
       case RouteNames.recording:
         return MaterialPageRoute(builder: (_) => const RecordingView());
+
+      case '/modeSounds':
+        final args = settings.arguments as Map<String, dynamic>?;
+        final title = args?['title'] as String? ?? '';
+        final tag = args?['tag'] as int? ?? 0;
+        return MaterialPageRoute(
+          builder: (_) => ModeSoundsScreen(title: title, tag: tag),
+        );
 
       default:
         return MaterialPageRoute(

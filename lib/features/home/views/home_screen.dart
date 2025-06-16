@@ -77,38 +77,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const EnvironmentScanBanner(),
 
                   // Colored Noise List
-                  SizedBox(
-                    height: 120,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: const [
-                        NoiseTypeCard(
-                          title: 'White',
-                          icon: Icons.grain,
-                          color: Colors.white,
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final homeState = ref.watch(homeViewModelProvider);
+                      final soundPlayerNotifier = ref.read(soundPlayerProvider.notifier);
+                      final coloredNoises = homeState.allSounds.where((sound) => sound.tags.contains(101)).toList();
+                      return SizedBox(
+                        height: 120,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: coloredNoises.length,
+                          itemBuilder: (context, index) {
+                            final sound = coloredNoises[index];
+                            return GestureDetector(
+                              onTap: () {
+                                final directUrl = soundPlayerNotifier.googleDriveToDirect(sound.url);
+                                soundPlayerNotifier.showPlayer(
+                                  sound: SoundModel(
+                                    title: sound.title,
+                                    url_avatar: sound.url_avatar,
+                                    url: directUrl,
+                                    description: sound.description,
+                                    tags: sound.tags,
+                                  ),
+                                );
+                              },
+                              child: NoiseTypeCard(
+                                title: sound.title,
+                                icon: Icons.grain, // You can customize this based on sound
+                                color: Colors.white, // Or assign a color based on sound
+                              ),
+                            );
+                          },
                         ),
-                        NoiseTypeCard(
-                          title: 'Pink',
-                          icon: Icons.grain,
-                          color: Color(0xFFEB93B9),
-                        ),
-                        NoiseTypeCard(
-                          title: 'Brown',
-                          icon: Icons.grain,
-                          color: Color(0xFFEFD39533),
-                        ),
-                        NoiseTypeCard(
-                          title: 'Green',
-                          icon: Icons.grain,
-                          color: Color(0xFFACEF95),
-                        ),
-                        NoiseTypeCard(
-                          title: 'Blue',
-                          icon: Icons.grain,
-                          color: Color(0xFF9BBEF8),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 24),
 
@@ -122,31 +125,91 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.1,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: const [
-                        DailyModeCard(
-                          title: 'Easy Sleep',
-                          description: 'Calm your mind',
-                          icon: Icons.nightlight_round,
-                          color: Color(0xFF7B61FF),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final homeViewModel = ref.read(homeViewModelProvider.notifier);
+                      final soundPlayerState = ref.watch(soundPlayerProvider);
+                      final soundPlayerNotifier = ref.read(soundPlayerProvider.notifier);
+                      final modes = [
+                        {
+                          'title': 'Easy Sleep',
+                          'description': 'Calm your mind',
+                          'icon': Icons.nightlight_round,
+                          'color': Color(0xFF7B61FF),
+                          'sounds': homeViewModel.sleepSounds,
+                        },
+                        {
+                          'title': 'Relaxation',
+                          'description': 'Reduce stress',
+                          'icon': Icons.spa,
+                          'color': Color(0xFFFF6161),
+                          'sounds': homeViewModel.relaxSounds,
+                        },
+                        {
+                          'title': 'Meditate',
+                          'description': 'Find your center',
+                          'icon': Icons.self_improvement,
+                          'color': Color(0xFF61A3FF),
+                          'sounds': homeViewModel.meditateSounds,
+                        },
+                        {
+                          'title': 'Deep Work',
+                          'description': 'Boost productivity',
+                          'icon': Icons.psychology,
+                          'color': Color(0xFF61A3FF),
+                          'sounds': homeViewModel.deepworkSounds,
+                        },
+                        {
+                          'title': 'Energy Boost',
+                          'description': 'Feel energized',
+                          'icon': Icons.bolt,
+                          'color': Color(0xFFFFC300),
+                          'sounds': homeViewModel.energyBoostSounds,
+                        },
+                        {
+                          'title': 'Stress Relief',
+                          'description': 'Let go of tension',
+                          'icon': Icons.sentiment_satisfied,
+                          'color': Color(0xFF00C896),
+                          'sounds': homeViewModel.stressReliefSounds,
+                        },
+                        {
+                          'title': 'Healing Body',
+                          'description': 'Restore and heal',
+                          'icon': Icons.healing,
+                          'color': Color(0xFFB388FF),
+                          'sounds': homeViewModel.healingBodySounds,
+                        },
+                      ];
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.1,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: modes.length,
+                          itemBuilder: (context, index) {
+                            final mode = modes[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/modeSounds',
+                                  arguments: {
+                                    'title': mode['title'] as String,
+                                    'tag': _getTagForMode(mode['title'] as String),
+                                  },
+                                );
+                              },
+                              child: DailyModeCard(
+                                title: mode['title'] as String,
+                                description: mode['description'] as String,
+                                icon: mode['icon'] as IconData,
+                                color: mode['color'] as Color,
+                              ),
+                            );
+                          },
                         ),
-                        DailyModeCard(
-                          title: 'Deep Focus',
-                          description: 'Boost productivity',
-                          icon: Icons.psychology,
-                          color: Color(0xFF61A3FF),
-                        ),
-                        DailyModeCard(
-                          title: 'Relaxation',
-                          description: 'Reduce stress',
-                          icon: Icons.spa,
-                          color: Color(0xFFFF6161),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 24),
 
@@ -232,5 +295,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+  }
+
+  int _getTagForMode(String title) {
+    switch (title) {
+      case 'Easy Sleep':
+        return 202;
+      case 'Relaxation':
+        return 303;
+      case 'Meditate':
+        return 404;
+      case 'Deep Work':
+        return 505;
+      case 'Energy Boost':
+        return 606;
+      case 'Stress Relief':
+        return 707;
+      case 'Healing Body':
+        return 808;
+      default:
+        return 0;
+    }
   }
 }

@@ -224,7 +224,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     });
   }
 
-  String _googleDriveToDirect(String url) {
+  String googleDriveToDirect(String url) {
     final reg = RegExp(r"/d/([\w-]+)");
     final match = reg.firstMatch(url);
     if (match != null) {
