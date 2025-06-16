@@ -1,35 +1,35 @@
 class SoundModel {
-  final String audioName;
-  final String imageUrl;
-  final String audioDirectUrl;
-  final String googleDriveUrl;
+  final String title;
+  final String url_avatar;
+  final String url;
   final String description;
+  final List<int> tags;
 
   SoundModel({
-    required this.audioName,
-    required this.imageUrl,
-    required this.audioDirectUrl,
-    required this.googleDriveUrl,
+    required this.title,
+    required this.url_avatar,
+    required this.url,
     required this.description,
+    required this.tags,
   });
 
   factory SoundModel.fromJson(Map<String, dynamic> json) {
     return SoundModel(
-      audioName: json['audioName'],
-      imageUrl: json['imageUrl'],
-      audioDirectUrl: json['audioDirectUrl'],
-      googleDriveUrl: json['googleDriveUrl'],
+      title: json['title'],
+      url_avatar: json['url_avatar'],
+      url: json['url'],
       description: json['description'] ?? '',
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as int).toList() ?? [],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'audioName': audioName,
-      'imageUrl': imageUrl,
-      'audioDirectUrl': audioDirectUrl,
-      'googleDriveUrl': googleDriveUrl,
+      'title': title,
+      'url_avatar': url_avatar,
+      'url': url,
       'description': description,
+      'tags': tags,
     };
   }
 } 

@@ -71,7 +71,7 @@ class SoundPlayerUI extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: Text(
-                    sound?.audioName ?? '',
+                    sound?.title ?? '',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -93,7 +93,7 @@ class SoundPlayerUI extends StatelessWidget {
                 // Circular avatar
                 CircleAvatar(
                   radius: 120,
-                  backgroundImage: NetworkImage(sound?.imageUrl ?? ''),
+                  backgroundImage: NetworkImage(sound?.url_avatar ?? ''),
                 ),
                 const SizedBox(height: 40),
                 // Progress bar

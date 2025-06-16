@@ -8,13 +8,27 @@ import '../widgets/daily_mode_card.dart';
 import '../widgets/top_pick_card.dart';
 import '../widgets/mini_player.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../viewmodels/home_view_model.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
- 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch sound data when HomeScreen is mounted
+    Future.microtask(() {
+      ref.read(homeViewModelProvider.notifier).fetchSoundData();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final soundPlayerState = ref.watch(soundPlayerProvider);
     return Scaffold(
       backgroundColor: const Color(0xFF141318),
@@ -71,22 +85,27 @@ class HomeScreen extends ConsumerWidget {
                         NoiseTypeCard(
                           title: 'White',
                           icon: Icons.grain,
-                          color: Color(0xFF7B61FF),
+                          color: Colors.white,
                         ),
                         NoiseTypeCard(
                           title: 'Pink',
                           icon: Icons.grain,
-                          color: Color(0xFFFF61A3),
+                          color: Color(0xFFEB93B9),
                         ),
                         NoiseTypeCard(
                           title: 'Brown',
                           icon: Icons.grain,
-                          color: Color(0xFFA361FF),
+                          color: Color(0xFFEFD39533),
                         ),
                         NoiseTypeCard(
                           title: 'Green',
                           icon: Icons.grain,
-                          color: Color(0xFF61FFA3),
+                          color: Color(0xFFACEF95),
+                        ),
+                        NoiseTypeCard(
+                          title: 'Blue',
+                          icon: Icons.grain,
+                          color: Color(0xFF9BBEF8),
                         ),
                       ],
                     ),
@@ -149,11 +168,11 @@ class HomeScreen extends ConsumerWidget {
                         TopPickCard(
                           onTap: () => ref.read(soundPlayerProvider.notifier).showPlayer(
                             sound: SoundModel(
-                              audioName: 'AAA', 
-                              imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e', 
-                              audioDirectUrl: '',
-                              googleDriveUrl: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
-                              description: ''),
+                              title: 'AAA',
+                              url_avatar: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
+                              url: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
+                              description: '',
+                              tags: const []),
                           ),
                           title: 'Ocean Waves',
                           artist: 'Nature Sounds',
@@ -186,9 +205,9 @@ class HomeScreen extends ConsumerWidget {
                 right: 0,
                 bottom: 0,
                 child: MiniPlayer(
-                  title: soundPlayerState.sound?.audioName ?? '',
+                  title: soundPlayerState.sound?.title ?? '',
                   artist: '',
-                  imageUrl: soundPlayerState.sound?.imageUrl ?? '',
+                  imageUrl: soundPlayerState.sound?.url_avatar ?? '',
                   isPlaying: soundPlayerState.isPlaying,
                   onPlayPause: () {
                     ref.read(soundPlayerProvider.notifier).togglePlayPause();

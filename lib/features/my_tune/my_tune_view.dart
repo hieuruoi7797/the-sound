@@ -13,25 +13,25 @@ class MyTuneView extends ConsumerWidget {
     final soundPlayerState = ref.watch(soundPlayerProvider);
     final List<SoundModel> mockSounds = [
       SoundModel(
-        audioName: 'Pink Noise 1',
-        imageUrl: 'https://images.unsplash.com/photo-1511295742362-92c96b1cf484',
-        audioDirectUrl: '',
-        googleDriveUrl: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
+        title: 'Pink Noise 1',
+        url_avatar: 'https://images.unsplash.com/photo-1511295742362-92c96b1cf484',
+        url: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
         description: 'Mock sound 1',
+        tags: const [],
       ),
       SoundModel(
-        audioName: 'Pink Noise 2',
-        imageUrl: 'https://images.unsplash.com/photo-1511497584788-876760111969',
-        audioDirectUrl: '',
-        googleDriveUrl: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
+        title: 'Pink Noise 2',
+        url_avatar: 'https://images.unsplash.com/photo-1511497584788-876760111969',
+        url: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
         description: 'Mock sound 2',
+        tags: const [],
       ),
       SoundModel(
-        audioName: 'Pink Noise 3',
-        imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-        audioDirectUrl: '',
-        googleDriveUrl: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
+        title: 'Pink Noise 3',
+        url_avatar: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
+        url: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
         description: 'Mock sound 3',
+        tags: const [],
       ),
     ];
 
@@ -92,9 +92,9 @@ class MyTuneView extends ConsumerWidget {
                   right: 0,
                   bottom: 0,
                   child: MiniPlayer(
-                    title: soundPlayerState.sound?.audioName ?? '',
+                    title: soundPlayerState.sound?.title ?? '',
                     artist: '',
-                    imageUrl: soundPlayerState.sound?.imageUrl ?? '',
+                    imageUrl: soundPlayerState.sound?.url_avatar ?? '',
                     isPlaying: soundPlayerState.isPlaying,
                     onPlayPause: () {
                       ref.read(soundPlayerProvider.notifier).togglePlayPause();
@@ -143,7 +143,7 @@ class MyTuneView extends ConsumerWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 image: DecorationImage(
-                  image: NetworkImage(sound.imageUrl),
+                  image: NetworkImage(sound.url_avatar),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -168,7 +168,7 @@ class MyTuneView extends ConsumerWidget {
                     left: 8,
                     bottom: 8,
                     child: Text(
-                      sound.audioName,
+                      sound.title,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,

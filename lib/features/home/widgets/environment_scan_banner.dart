@@ -23,9 +23,15 @@ class EnvironmentScanBanner extends StatelessWidget {
           horizontal: AppSizes.padding,
           vertical: AppSizes.spaceBtwItems,
         ),
-        padding: const EdgeInsets.all(AppSizes.padding * 1.5),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors:[
+              Color(0xFF00000099), 
+              Color(0xFF00000000),
+            ]),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: Colors.white.withOpacity(0.08),
@@ -39,28 +45,32 @@ class EnvironmentScanBanner extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 24),
-            Text(
-              'Environment Scan',
-              style: AppTextStyles.heading1.copyWith(
-                fontSize: 22,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 24),
+              Text(
+                'Environment Scan',
+                style: AppTextStyles.heading1.copyWith(
+                  fontSize: 20,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Discover sounds that suit your space',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: const Color(0xFFB0B0C3),
+              const SizedBox(height: 4),
+              Text(
+                'Discover sounds that suit your space',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontSize: 17,
+                  color: const Color(0xFF7E7B8F),
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );

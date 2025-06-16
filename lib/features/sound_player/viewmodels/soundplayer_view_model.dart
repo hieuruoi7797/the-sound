@@ -110,9 +110,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
 
     _stopTimer?.cancel();
 
-    final directUrl = sound.audioDirectUrl.isNotEmpty ?
-     sound.audioDirectUrl :
-      _googleDriveToDirect(sound.googleDriveUrl);
+    final directUrl = sound.url;
 
     final tempPlayer = AudioPlayer();
     try {
@@ -249,7 +247,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
       print("showPlayer called with no sound and no sound loaded.");
       return;
     } else if (state.sound != null && sound != null && state.sound != sound) {
-      print("Loading new sound: ${sound.audioName}");
+      print("Loading new sound: \\${sound.title}");
       await setAudio(sound);
     }
     state = state.copyWith(showPlayer: true);

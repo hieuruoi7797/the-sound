@@ -75,6 +75,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
     setState(() {
       isScanning = false;
     });
+    print('View: finishScan, selectedScene after update: ${ref.read(recordingViewModelProvider).value?.selectedScene}');
   }
 
   @override
@@ -86,6 +87,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
   @override
   Widget build(BuildContext context) {
     final recordingState = ref.watch(recordingViewModelProvider);
+    print('View: build method, recordingState.value?.selectedScene: ${recordingState.value?.selectedScene}');
     final screenWidth = MediaQuery.of(context).size.width;
     final buttonSize = screenWidth * 0.61;
     // Listen to frequency updates while scanning
@@ -188,16 +190,43 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
                 const SizedBox(height: 16.0),
                 _SonicReadingCard(avgFrequency: avgFrequency!, frequencyDescription: recordingState.value?.frequencyDescription),
                 const SizedBox(height: 48.0),
-                Text(
-                  'Recommended Tune',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                _RecommendedTunesList(), // Placeholder for recommended tunes
+                recordingState.value?.selectedScene == null
+                    ? Column(
+                        children: [
+                          Text(
+                            'Choose your scene',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16.0),
+                          _ChooseYourSceneGrid(onSceneSelected: (scene) {
+                            ref.read(recordingViewModelProvider.notifier).updateSelectedScene(scene);
+                          }),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Text(
+                            'Recommended Tune',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16.0),
+                          _RecommendedTunesList(),
+                          const SizedBox(height: 48.0),
+                          _ScanAgainButton(onTap: () {
+                            startScan();
+                          }),
+                        ],
+                      ),
               ],
             ),
           ),
@@ -412,6 +441,68 @@ class _SonicReadingCard extends StatelessWidget {
   }
 }
 
+class _ChooseYourSceneGrid extends StatelessWidget {
+  final Function(String) onSceneSelected;
+
+  _ChooseYourSceneGrid({required this.onSceneSelected});
+
+  final List<Map<String, dynamic>> scenes = [
+    {'name': 'Sleep', 'icon': Icons.nights_stay},
+    {'name': 'Relax', 'icon': Icons.sentiment_satisfied_alt},
+    {'name': 'Stress Relief', 'icon': Icons.sentiment_dissatisfied},
+    {'name': 'Deep Work', 'icon': Icons.work},
+    {'name': 'Energy Boost', 'icon': Icons.bolt},
+    {'name': 'Meditate', 'icon': Icons.self_improvement},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 16.0,
+        mainAxisSpacing: 16.0,
+        childAspectRatio: 0.85,
+      ),
+      itemCount: scenes.length,
+      itemBuilder: (context, index) {
+        final scene = scenes[index];
+        return GestureDetector(
+          onTap: () => onSceneSelected(scene['name']),
+          child: Column(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.08),
+                  border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                ),
+                child: Icon(
+                  scene['icon'],
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Text(
+                scene['name'],
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _RecommendedTunesList extends StatelessWidget {
   // Placeholder data - replace with actual SoundModel list
   final List<Map<String, dynamic>> recommendedTunes = [
@@ -477,6 +568,42 @@ class _RecommendedTunesList extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _ScanAgainButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ScanAgainButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF2E2B3C), // Background color
+        foregroundColor: Colors.white, // Text color
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(100.0),
+          side: const BorderSide(color: Color(0x1AFFFFFF), width: 1.71),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(Icons.refresh, size: 24),
+          SizedBox(width: 8.0),
+          Text(
+            'Scan Again',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

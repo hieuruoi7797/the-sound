@@ -18,12 +18,14 @@ class RecordingState {
   final List<double> frequencies;
   final bool hasPermission;
   final String? frequencyDescription;
+  final String? selectedScene;
 
   RecordingState({
     this.isRecording = false,
     this.frequencies = const [],
     this.hasPermission = false,
     this.frequencyDescription,
+    this.selectedScene,
   });
 
   RecordingState copyWith({
@@ -31,12 +33,14 @@ class RecordingState {
     List<double>? frequencies,
     bool? hasPermission,
     String? frequencyDescription,
+    String? selectedScene,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
       frequencies: frequencies ?? this.frequencies,
       hasPermission: hasPermission ?? this.hasPermission,
       frequencyDescription: frequencyDescription ?? this.frequencyDescription,
+      selectedScene: selectedScene,
     );
   }
 }
@@ -87,26 +91,34 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
       if (!currentState.isRecording) {
         await _service.startRecording();
         _startListeningFrequency();
+        state = AsyncValue.data(currentState.copyWith(
+          isRecording: true,
+          frequencies: [],
+          frequencyDescription: null,
+          selectedScene: null,
+        ));
+        print('ViewModel: Scan started, selectedScene: ${state.value?.selectedScene}');
+        return;
       } else {
         await _service.stopRecording();
         await _frequencySubscription?.cancel();
-        if (currentState.frequencies.isNotEmpty) {
-          final avgFrequency = currentState.frequencies.reduce((a, b) => a + b) / currentState.frequencies.length;
-          final description = await _service.getFrequencyDescription(avgFrequency);
-          state = AsyncValue.data(currentState.copyWith(
-            isRecording: false,
-            frequencies: [],
-            frequencyDescription: description,
-          ));
-          return;
-        }
-      }
 
-      state = AsyncValue.data(currentState.copyWith(
-        isRecording: !currentState.isRecording,
-        frequencies: !currentState.isRecording ? [] : currentState.frequencies,
-        frequencyDescription: null,
-      ));
+        double? avgFrequency;
+        String? description;
+
+        if (currentState.frequencies.isNotEmpty) {
+          avgFrequency = currentState.frequencies.reduce((a, b) => a + b) / currentState.frequencies.length;
+          description = await _service.getFrequencyDescription(avgFrequency);
+        }
+
+        state = AsyncValue.data(currentState.copyWith(
+          isRecording: false,
+          frequencies: [],
+          frequencyDescription: description,
+          selectedScene: null,
+        ));
+        print('ViewModel: Scan stopped, selectedScene: ${state.value?.selectedScene}');
+      }
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
@@ -154,6 +166,11 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
     }
     await toggleRecording();
     return true;
+  }
+
+  void updateSelectedScene(String? scene) {
+    if (state.value == null) return;
+    state = AsyncValue.data(state.value!.copyWith(selectedScene: scene));
   }
 
   @override
