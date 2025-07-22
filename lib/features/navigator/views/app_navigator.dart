@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mytune/features/settings/views/settings_screen.dart';
 import '../views/navigator_ui.dart';
-import '../widgets/placeholder_screen.dart';
 import '../../home/views/home_screen.dart';
 import '../../my_tune/my_tune_view.dart';
 
@@ -14,11 +14,8 @@ class AppNavigator extends StatelessWidget {
         // Home Screen
         HomeScreen(),
         MyTuneView(),
-        // AI Helper Screen
-        PlaceholderScreen(
-          title: 'AI Helper',
-          icon: Icons.settings,
-        ),
+        // Settings Screen
+        SettingsScreen(),
       ],
     );
   }

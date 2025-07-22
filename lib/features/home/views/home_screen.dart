@@ -31,7 +31,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final soundPlayerState = ref.watch(soundPlayerProvider);
-    return Scaffold(
+    return  
+     (soundPlayerState.showPlayer)?
+              SoundPlayerUI(
+                currentTime: soundPlayerState.currentTime,
+                isPlaying: soundPlayerState.isPlaying,
+                onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
+                onLike: () => ref.read(soundPlayerProvider.notifier).like(),
+                onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
+                onQueue: () {},
+                sound: soundPlayerState.sound,
+                totalDuration: soundPlayerState.timerDuration,
+              ):
+              Scaffold(
       backgroundColor: const Color(0xFF141318),
       body: SafeArea(
         child: Stack(
@@ -282,17 +294,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ref.read(soundPlayerProvider.notifier).showPlayer();
                   },
                 ),
-              ),
-            if (soundPlayerState.showPlayer)
-              SoundPlayerUI(
-                currentTime: soundPlayerState.currentTime,
-                isPlaying: soundPlayerState.isPlaying,
-                onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
-                onLike: () => ref.read(soundPlayerProvider.notifier).like(),
-                onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
-                onQueue: () {},
-                sound: soundPlayerState.sound,
-                totalDuration: soundPlayerState.timerDuration,
               ),
           ],
         ),

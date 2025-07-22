@@ -47,7 +47,17 @@ class _MyTuneViewState extends ConsumerState<MyTuneView> with SingleTickerProvid
 
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
+      child: (soundPlayerState.showPlayer)?
+                SoundPlayerUI(
+                  currentTime: soundPlayerState.currentTime,
+                  isPlaying: soundPlayerState.isPlaying,
+                  onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
+                  onLike: () => ref.read(soundPlayerProvider.notifier).like(),
+                  onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
+                  onQueue: () {},
+                  sound: soundPlayerState.sound,
+                  totalDuration: soundPlayerState.timerDuration,
+                ):Scaffold(
         backgroundColor: const Color(0xFF141318),
         appBar: AppBar(
           backgroundColor: const Color(0xFF141318),
@@ -114,17 +124,6 @@ class _MyTuneViewState extends ConsumerState<MyTuneView> with SingleTickerProvid
                       ref.read(soundPlayerProvider.notifier).showPlayer();
                     },
                   ),
-                ),
-              if (soundPlayerState.showPlayer)
-                SoundPlayerUI(
-                  currentTime: soundPlayerState.currentTime,
-                  isPlaying: soundPlayerState.isPlaying,
-                  onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
-                  onLike: () => ref.read(soundPlayerProvider.notifier).like(),
-                  onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
-                  onQueue: () {},
-                  sound: soundPlayerState.sound,
-                  totalDuration: soundPlayerState.timerDuration,
                 ),
             ],
           ),

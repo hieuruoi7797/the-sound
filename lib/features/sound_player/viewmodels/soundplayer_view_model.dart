@@ -11,6 +11,7 @@ import 'package:just_audio/just_audio.dart';
 import '../models/sound_model.dart';
 import '../../timer/viewmodels/timer_setting_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../settings/viewmodels/settings_view_model.dart';
 
 class SoundPlayerState {
   final SoundModel? sound;
@@ -71,6 +72,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
 
   SoundPlayerViewModel(this._audioHandlerFuture, this._ref) : super(SoundPlayerState()) {
     _init();
+    _listenToFadeSettings();
   }
 
   Future<void> _init() async {
@@ -93,6 +95,17 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
       },
       fireImmediately: true,
     ).close;
+  }
+
+  void _listenToFadeSettings() {
+    _ref.listen<SettingsState>(
+      settingsViewModelProvider,
+      (prev, next) {
+        audioHandler.setFadeInSeconds(next.fadeInSeconds);
+        audioHandler.setFadeOutSeconds(next.fadeOutSeconds);
+      },
+      fireImmediately: true,
+    );
   }
 
   void _scheduleStopTimer(Duration duration) {

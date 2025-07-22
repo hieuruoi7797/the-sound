@@ -36,7 +36,7 @@ class NavigatorUI extends ConsumerWidget {
               children: [
                 _buildNavItem(ref, 0, Icons.home, 'Home'),
                 _buildNavItem(ref, 1, Icons.music_note, 'My Tune'),
-                _buildNavItem(ref, 2, Icons.smart_toy, 'Settings'),
+                _buildNavItem(ref, 2, Icons.settings, 'Settings'),
               ],
             ),
           ),
@@ -50,7 +50,7 @@ class NavigatorUI extends ConsumerWidget {
     final isSelected = currentIndex == index;
     
     return InkWell(
-      onTap: () => ref.read(navigatorViewModelProvider.notifier).setTab(index),
+      onTap: () => ref.read(navigatorViewModelProvider.notifier).setTab(index, ref),
       child: NavigationItem(
         icon: icon,
         label: label,
