@@ -10,4 +10,7 @@ class AppStrings {
   static const String continueWithApple = 'Continue with Apple';
   static const String dontHaveAccount = 'Don\'t have an account?';
   static const String signUp = 'Sign Up';
+  // My Tune Screen
+  static const String favoritesKey = 'favorite_sounds';
+  static const String recentsKey = 'recent_sounds';
 } 

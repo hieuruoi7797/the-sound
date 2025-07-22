@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
 import '../models/sound_model.dart';
 import '../../timer/views/timer_setting_view.dart';
 
-class SoundPlayerUI extends StatelessWidget {
+class SoundPlayerUI extends ConsumerWidget {
   final SoundModel? sound;
   final Duration currentTime;
   final bool isPlaying;
@@ -12,6 +14,7 @@ class SoundPlayerUI extends StatelessWidget {
   // final VoidCallback onTimer;
   final VoidCallback onQueue;
   final Duration totalDuration;
+
   const SoundPlayerUI({
     super.key,
     this.sound,
@@ -26,7 +29,8 @@ class SoundPlayerUI extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLiked = ref.watch(soundPlayerProvider.select((s) => s.isLiked));
     return Scaffold(
       backgroundColor: const Color(0xFF5C576A),
       body: SafeArea(
@@ -54,7 +58,7 @@ class SoundPlayerUI extends StatelessWidget {
                     CircleAvatar(
                       backgroundColor: Colors.black.withOpacity(0.2),
                       child: IconButton(
-                        icon: const Icon(Icons.favorite_border, color: Colors.white),
+                        icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border, color: Colors.white),
                         onPressed: onLike,
                       ),
                     ),

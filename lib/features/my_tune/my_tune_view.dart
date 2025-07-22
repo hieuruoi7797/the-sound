@@ -4,36 +4,46 @@ import 'package:mytune/features/sound_player/models/sound_model.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
 import 'package:mytune/features/sound_player/views/sound_player_ui.dart';
 import 'package:mytune/features/home/widgets/mini_player.dart';
+import 'package:mytune/features/my_tune/my_tune_view_model.dart';
 
-class MyTuneView extends ConsumerWidget {
+class MyTuneView extends ConsumerStatefulWidget {
   const MyTuneView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyTuneView> createState() => _MyTuneViewState();
+}
+
+class _MyTuneViewState extends ConsumerState<MyTuneView> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
+  }
+
+  void _handleTabChange() {
+    if (_tabController.index == 1 && _tabController.indexIsChanging) {
+      ref.read(myTuneViewModelProvider.notifier).refreshFavorites();
+    }
+    if (_tabController.index == 0 && _tabController.indexIsChanging) {
+      ref.read(myTuneRecentsViewModelProvider.notifier).refreshRecents();
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final soundPlayerState = ref.watch(soundPlayerProvider);
-    final List<SoundModel> mockSounds = [
-      SoundModel(
-        title: 'Pink Noise 1',
-        url_avatar: 'https://images.unsplash.com/photo-1511295742362-92c96b1cf484',
-        url: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
-        description: 'Mock sound 1',
-        tags: const [],
-      ),
-      SoundModel(
-        title: 'Pink Noise 2',
-        url_avatar: 'https://images.unsplash.com/photo-1511497584788-876760111969',
-        url: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
-        description: 'Mock sound 2',
-        tags: const [],
-      ),
-      SoundModel(
-        title: 'Pink Noise 3',
-        url_avatar: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-        url: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
-        description: 'Mock sound 3',
-        tags: const [],
-      ),
-    ];
+    final favorites = ref.watch(myTuneViewModelProvider);
+    final recents = ref.watch(myTuneRecentsViewModelProvider);
 
     return DefaultTabController(
       length: 2,
@@ -53,11 +63,11 @@ class MyTuneView extends ConsumerWidget {
             ),
           ),
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(kToolbarHeight + 16), // Adjusted height for padding
+            preferredSize: const Size.fromHeight(kToolbarHeight + 16),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: TabBar(
-                // isScrollable: true,
+                controller: _tabController,
                 indicator: BoxDecoration(
                   color: Colors.grey[700],
                   borderRadius: BorderRadius.circular(24),
@@ -81,9 +91,10 @@ class MyTuneView extends ConsumerWidget {
           child: Stack(
             children: [
               TabBarView(
+                controller: _tabController,
                 children: [
-                  _buildGridView(context, mockSounds),
-                  _buildGridView(context, mockSounds), // Same mock data for favorites for now
+                  _buildGridView(context, recents),
+                  _buildGridView(context, favorites),
                 ],
               ),
               if (soundPlayerState.sound != null)
@@ -137,7 +148,7 @@ class MyTuneView extends ConsumerWidget {
           final sound = sounds[index];
           return GestureDetector(
             onTap: () {
-              // Handle sound item tap
+              ref.read(soundPlayerProvider.notifier).setAudio(sound);
             },
             child: Container(
               decoration: BoxDecoration(

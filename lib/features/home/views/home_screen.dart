@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mytune/core/constants/assets.dart';
 import 'package:mytune/features/sound_player/models/sound_model.dart';
 import 'package:mytune/features/sound_player/views/sound_player_ui.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
@@ -89,13 +90,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           itemCount: coloredNoises.length,
                           itemBuilder: (context, index) {
                             final sound = coloredNoises[index];
+                            final iconUrl = soundPlayerNotifier.googleDriveToDirect(sound.url_avatar);
                             return GestureDetector(
                               onTap: () {
                                 final directUrl = soundPlayerNotifier.googleDriveToDirect(sound.url);
+                                final directAvtUrl = soundPlayerNotifier.googleDriveToDirect(sound.url_avatar);
                                 soundPlayerNotifier.showPlayer(
                                   sound: SoundModel(
                                     title: sound.title,
-                                    url_avatar: sound.url_avatar,
+                                    url_avatar: directAvtUrl,
                                     url: directUrl,
                                     description: sound.description,
                                     tags: sound.tags,
@@ -104,7 +107,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               },
                               child: NoiseTypeCard(
                                 title: sound.title,
-                                icon: Icons.grain, // You can customize this based on sound
+                                icon: iconUrl, // You can customize this based on sound
                                 color: Colors.white, // Or assign a color based on sound
                               ),
                             );
@@ -287,9 +290,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
                 onLike: () => ref.read(soundPlayerProvider.notifier).like(),
                 onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
-                // onTimer: () => ref.read(soundPlayerProvider.notifier).setTimer(const Duration(minutes: 10)),
-                onQueue: () {}, 
-                sound: soundPlayerState.sound, totalDuration: soundPlayerState.timerDuration,
+                onQueue: () {},
+                sound: soundPlayerState.sound,
+                totalDuration: soundPlayerState.timerDuration,
               ),
           ],
         ),

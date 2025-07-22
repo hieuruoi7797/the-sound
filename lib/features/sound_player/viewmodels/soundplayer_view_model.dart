@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:ui';
+import 'dart:convert';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:mytune/core/constants/app_strings.dart';
 import 'package:mytune/features/sound_player/viewmodels/my_audio_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/sound_model.dart';
 import '../../timer/viewmodels/timer_setting_view_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SoundPlayerState {
   final SoundModel? sound;
@@ -60,6 +65,9 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   Timer? _stopTimer;
   Duration? _currentAudioDuration;
   VoidCallback? _timerListenerDispose;
+  List<SoundModel> _favorites = [];
+
+  List<SoundModel> get favorites => List.unmodifiable(_favorites);
 
   SoundPlayerViewModel(this._audioHandlerFuture, this._ref) : super(SoundPlayerState()) {
     _init();
@@ -68,6 +76,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   Future<void> _init() async {
     audioHandler = await _audioHandlerFuture;
     _listenToTimerDurationChanges();
+    await _loadFavorites();
   }
 
   void _listenToTimerDurationChanges() {
@@ -110,11 +119,20 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
 
     _stopTimer?.cancel();
 
-    final directUrl = sound.url;
+    String directUrl = sound.url;
 
     final tempPlayer = AudioPlayer();
     try {
+      ///USING FIREBASE STORAGE.
+      // await Firebase.initializeApp(); // rất quan trọng
+
+      // final ref = FirebaseStorage.instance.ref().child("14.wav");
+      // directUrl = await ref.getDownloadURL();
+      // print("hieuttcheck_URL: $directUrl");
       await tempPlayer.setUrl(directUrl);
+       // Save to recents
+      await _addToRecents(sound);
+
       _currentAudioDuration = tempPlayer.duration;
     } finally {
       tempPlayer.dispose();
@@ -162,6 +180,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
       showPlayer: true,
       isPlaying: false,
       timerDuration: currentTimerDuration,
+      isLiked: isFavorite(sound),
     );
 
     play();
@@ -195,13 +214,20 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     }
   }
 
-  void like() {
-    state = state.copyWith(isLiked: !state.isLiked);
+  void like() async {
+    if (state.sound == null) return;
+    final isFav = _favorites.any((s) => s.url == state.sound!.url);
+    if (isFav) {
+      _favorites.removeWhere((s) => s.url == state.sound!.url);
+    } else {
+      _favorites.add(state.sound!);
+    }
+    await _saveFavorites();
+    state = state.copyWith(isLiked: !isFav);
   }
 
   void collapse() {
     state = state.copyWith(showPlayer: false);
-    pause();
   }
 
   void _listenToPosition() {
@@ -240,6 +266,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   }
 
   void showPlayer({SoundModel? sound}) async {
+      final sw = Stopwatch()..start();
     if (state.sound == null && sound != null) {
       await setAudio(sound);
     } else if (state.sound == null && sound == null) {
@@ -250,6 +277,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
       print("Loading new sound: \\${sound.title}");
       await setAudio(sound);
     }
+    print('⏱ setUrl took: ${sw.elapsedMilliseconds} ms');
     state = state.copyWith(showPlayer: true);
     play();
   }
@@ -262,5 +290,44 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     _timerListenerDispose?.call();
     audioHandler.player.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    final favJson = prefs.getStringList(AppStrings.favoritesKey) ?? [];
+    _favorites = favJson.map((e) => SoundModel.fromJson(jsonDecode(e))).toList();
+  }
+
+  Future<void> _saveFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    final favJson = _favorites.map((e) => jsonEncode(e.toJson())).toList();
+    await prefs.setStringList(AppStrings.favoritesKey, favJson);
+  }
+
+  bool isFavorite(SoundModel sound) {
+    return _favorites.any((s) => s.url == sound.url);
+  }
+
+  // Recents logic
+  Future<void> _addToRecents(SoundModel sound) async {
+    final prefs = await SharedPreferences.getInstance();
+    final recentsJson = prefs.getStringList(AppStrings.recentsKey) ?? [];
+    List<SoundModel> recents = recentsJson.map((e) => SoundModel.fromJson(jsonDecode(e))).toList();
+    // Remove if already exists
+    recents.removeWhere((s) => s.url == sound.url);
+    // Insert at start
+    recents.insert(0, sound);
+    // Limit to 20
+    if (recents.length > 20) {
+      recents = recents.sublist(0, 20);
+    }
+    final newJson = recents.map((e) => jsonEncode(e.toJson())).toList();
+    await prefs.setStringList(AppStrings.recentsKey, newJson);
+  }
+
+  Future<List<SoundModel>> getRecents() async {
+    final prefs = await SharedPreferences.getInstance();
+    final recentsJson = prefs.getStringList(AppStrings.recentsKey) ?? [];
+    return recentsJson.map((e) => SoundModel.fromJson(jsonDecode(e))).toList();
   }
 }

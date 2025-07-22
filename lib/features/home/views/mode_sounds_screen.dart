@@ -76,13 +76,14 @@ class ModeSoundsScreen extends ConsumerWidget {
                 itemCount: sounds.length,
                 itemBuilder: (context, index) {
                   final sound = sounds[index];
+                  final directUrl = soundPlayerNotifier.googleDriveToDirect(sound.url);
+                  final directAvtUrl = soundPlayerNotifier.googleDriveToDirect(sound.url_avatar);
                   return GestureDetector(
                     onTap: () {
-                      final directUrl = soundPlayerNotifier.googleDriveToDirect(sound.url);
                       soundPlayerNotifier.showPlayer(
                         sound: SoundModel(
                           title: sound.title,
-                          url_avatar: sound.url_avatar,
+                          url_avatar: directAvtUrl,
                           url: directUrl,
                           description: sound.description,
                           tags: sound.tags,
@@ -93,7 +94,7 @@ class ModeSoundsScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         image: DecorationImage(
-                          image: NetworkImage(sound.url_avatar),
+                          image: NetworkImage(directAvtUrl),
                           fit: BoxFit.cover,
                         ),
                       ),
