@@ -5,8 +5,8 @@ class SettingsState {
   final int fadeInSeconds;
   final int fadeOutSeconds;
   const SettingsState({
-    this.fadeInSeconds = 5,
-    this.fadeOutSeconds = 5,
+    this.fadeInSeconds = 0,
+    this.fadeOutSeconds = 0,
   });
 
   SettingsState copyWith({int? fadeInSeconds, int? fadeOutSeconds}) {
@@ -24,8 +24,8 @@ class SettingsViewModel extends StateNotifier<SettingsState> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    final fadeIn = prefs.getInt('fadeInSeconds') ?? 5;
-    final fadeOut = prefs.getInt('fadeOutSeconds') ?? 5;
+    final fadeIn = prefs.getInt('fadeInSeconds') ?? 0;
+    final fadeOut = prefs.getInt('fadeOutSeconds') ?? 0;
     state = state.copyWith(fadeInSeconds: fadeIn, fadeOutSeconds: fadeOut);
   }
 

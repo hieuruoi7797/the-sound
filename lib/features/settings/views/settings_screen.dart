@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../viewmodels/settings_view_model.dart';
+import 'fade_setting_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsViewModelProvider);
+    final settingsNotifier = ref.read(settingsViewModelProvider.notifier);
     return Scaffold(
       backgroundColor: const Color(0xFF141318),
       body: SafeArea(
@@ -37,27 +41,41 @@ class SettingsScreen extends ConsumerWidget {
               _buildSettingItem(
                 icon: Icons.graphic_eq,
                 title: 'Fade In',
-                value: '5 second',
+                value: _formatFade(settings.fadeInSeconds),
                 subtitle: 'Gently increase the volume at the start of playback for a smoother listening experience',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FadeSettingScreen(
+                        title: 'Fade In',
+                        selectedSeconds: settings.fadeInSeconds,
+                        options: [0, 5, 10, 30, 60, 120, 300, 600],
+                        onSelected: (value) => settingsNotifier.setFadeInSeconds(value),
+                      ),
+                    ),
+                  );
+                },
               ),
               _buildSettingItem(
                 icon: Icons.linear_scale,
                 title: 'Fade Out',
-                value: '5 second',
+                value: _formatFade(settings.fadeOutSeconds),
                 subtitle: 'Slowly lower the volume at the end of playback to avoid abrupt stops',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FadeSettingScreen(
+                        title: 'Fade Out',
+                        selectedSeconds: settings.fadeOutSeconds,
+                        options: [0, 5, 10, 30, 60, 120, 300, 600],
+                        onSelected: (value) => settingsNotifier.setFadeOutSeconds(value),
+                      ),
+                    ),
+                  );
+                },
               ),
-              // _buildSettingItem(
-              //   icon: Icons.layers,
-              //   title: 'Background Audio',
-              //   subtitle: 'Keep your sound playing while using other apps — perfect for multitasking with music, podcasts, or audiobooks',
-              //   trailing: Switch(
-              //     value: true, // This will be managed by the view model
-              //     onChanged: (value) {},
-              //     activeColor: Colors.purple,
-              //   ),
-              // ),
               const SizedBox(height: 24),
 
               // General
@@ -69,18 +87,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              // _buildSettingItem(
-              //   icon: Icons.language,
-              //   title: 'Language',
-              //   value: 'English',
-              //   onTap: () {},
-              // ),
-              // _buildSettingItem(
-              //   icon: Icons.notifications_none,
-              //   title: 'Reminder',
-              //   value: 'Off',
-              //   onTap: () {},
-              // ),
               _buildSettingItem(
                 icon: Icons.thumb_up_alt_outlined,
                 title: 'Rate us',
@@ -162,5 +168,12 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _formatFade(int seconds) {
+    if (seconds == 0) return '0 second';
+    if (seconds < 60) return '$seconds second';
+    if (seconds % 60 == 0) return '${seconds ~/ 60} minute';
+    return '${seconds ~/ 60} minute ${seconds % 60} second';
   }
 } 

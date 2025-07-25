@@ -19,8 +19,7 @@ final audioHandlerProvider = Provider<Future<MyAudioHandler>>((ref) async {
 
 class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   AudioPlayer player = AudioPlayer();
-  int fadeInSeconds = 5;
-  int fadeOutSeconds = 5;
+
 
   MyAudioHandler() {
     _init();
@@ -29,7 +28,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> _init() async {
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
-    player.playerStateStream.listen((playerState) {
+    player.playerStateStream.listen((playerState) async {
       playbackState.add(playbackState.value.copyWith(
         playing: playerState.playing,
         processingState: {
@@ -48,29 +47,26 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     });
   }
 
-  void setFadeInSeconds(int seconds) {
-    fadeInSeconds = seconds;
-  }
 
-  void setFadeOutSeconds(int seconds) {
-    fadeOutSeconds = seconds;
-  }
-
-  Future<void> fadeIn() async {
+  Future<void> fadeIn(int fadeInSeconds) async {
     if (fadeInSeconds == 0) {
       await player.setVolume(1.0);
+      print('[FadeIn] Set volume: 1.0 (no fade)');
       return;
     }
     await player.setVolume(0.0);
+    print('[FadeIn] Set volume: 0.0 (start fade)');
     final steps = 20;
     final stepDuration = Duration(milliseconds: (fadeInSeconds * 1000 ~/ steps));
     for (int i = 1; i <= steps; i++) {
       await Future.delayed(stepDuration);
-      await player.setVolume(i / steps);
+      final v = i / steps;
+      await player.setVolume(v);
+      print('[FadeIn] Set volume: ' + v.toStringAsFixed(2));
     }
   }
 
-  Future<void> fadeOut() async {
+  Future<void> fadeOut(int fadeOutSeconds) async {
     if (fadeOutSeconds == 0) {
       await player.setVolume(0.0);
       return;
@@ -98,12 +94,10 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> play() async {
     await player.play();
-    await fadeIn();
   }
 
   @override
   Future<void> pause() async {
-    await fadeOut();
     await player.pause();
   }
 

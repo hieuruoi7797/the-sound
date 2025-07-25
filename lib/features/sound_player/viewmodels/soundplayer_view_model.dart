@@ -67,6 +67,8 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   Duration? _currentAudioDuration;
   VoidCallback? _timerListenerDispose;
   List<SoundModel> _favorites = [];
+  int fadeInSeconds = 0;
+  int fadeOutSeconds = 0;
 
   List<SoundModel> get favorites => List.unmodifiable(_favorites);
 
@@ -101,8 +103,8 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     _ref.listen<SettingsState>(
       settingsViewModelProvider,
       (prev, next) {
-        audioHandler.setFadeInSeconds(next.fadeInSeconds);
-        audioHandler.setFadeOutSeconds(next.fadeOutSeconds);
+        fadeInSeconds = next.fadeInSeconds;
+        fadeOutSeconds = next.fadeOutSeconds;
       },
       fireImmediately: true,
     );
@@ -197,6 +199,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     );
 
     play();
+    audioHandler.fadeIn(fadeInSeconds);
     _listenToPosition();
     _listenToPlayerState();
 
@@ -255,6 +258,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     _playerStateSub = audioHandler.player.playerStateStream.listen((playerState) {
       if (playerState.processingState == ProcessingState.completed) {
         print('Playlist completed.');
+        audioHandler.fadeOut(fadeOutSeconds);
         if (state.isPlaying) {
           pause();
           audioHandler.player.seek(Duration.zero);
@@ -343,4 +347,6 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     final recentsJson = prefs.getStringList(AppStrings.recentsKey) ?? [];
     return recentsJson.map((e) => SoundModel.fromJson(jsonDecode(e))).toList();
   }
+
+
 }
