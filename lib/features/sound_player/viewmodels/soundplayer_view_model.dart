@@ -4,6 +4,8 @@ import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mytune/core/constants/app_strings.dart';
 import 'package:mytune/features/sound_player/viewmodels/my_audio_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -250,6 +252,13 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     }
     await _saveFavorites();
     state = state.copyWith(isLiked: !isFav);
+    Fluttertoast.showToast(
+      msg: state.isLiked ? "Added to favorites" : "Removed from favorites",
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.black87,
+      textColor: Colors.white,
+    );
   }
 
   void collapse() {
