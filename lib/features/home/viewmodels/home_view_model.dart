@@ -6,23 +6,31 @@ import 'package:firebase_database/firebase_database.dart';
 
 class HomeState {
   final List<SoundModel> allSounds;
+  final List<SoundModel> topPicks;
+  final List<SoundModel> topPicksAll;
   final bool isLoading;
   final String? error;
 
   HomeState({
     this.allSounds = const [],
     this.isLoading = false,
+    this.topPicks = const [],
+    this.topPicksAll = const [],
     this.error,
   });
 
   HomeState copyWith({
     List<SoundModel>? allSounds,
     bool? isLoading,
+    List<SoundModel>? topPicks,
+    List<SoundModel>? topPicksAll,
     String? error,
   }) {
     return HomeState(
       allSounds: allSounds ?? this.allSounds,
       isLoading: isLoading ?? this.isLoading,
+      topPicks: topPicks ?? this.topPicks,
+      topPicksAll: topPicksAll ?? this.topPicksAll,
       error: error,
     );
   }
@@ -36,9 +44,7 @@ class HomeViewModel extends StateNotifier<HomeState> {
   final RealtimeDatabaseService _dbService = RealtimeDatabaseService();
   StreamSubscription<DatabaseEvent>? _topPicksSub;
 
-  HomeViewModel() : super(HomeState()) {
-    fetchSoundData();
-  }
+  HomeViewModel() : super(HomeState()) {}
 
   void fetchSoundData() {
     print('[HomeViewModel] Fetching sound data from root...');
@@ -53,9 +59,11 @@ class HomeViewModel extends StateNotifier<HomeState> {
           final systemSounds = SystemSoundsModel.fromJson(Map<String, dynamic>.from(data));
           print('[HomeViewModel] Parsed ${systemSounds.sounds.length} sounds from SystemSoundsModel');
           state = state.copyWith(allSounds: systemSounds.sounds, isLoading: false, error: null);
+          makeTopPicks();
         } else {
           print('[HomeViewModel] No valid data found.');
           state = state.copyWith(allSounds: [], isLoading: false, error: null);
+          makeTopPicks();
         }
         print('[HomeViewModel] State updated: topPicks=${state.allSounds.length}, isLoading=${state.isLoading}, error=${state.error}');
       } catch (e) {
@@ -82,6 +90,19 @@ class HomeViewModel extends StateNotifier<HomeState> {
   List<SoundModel> get energyBoostSounds => state.allSounds.where((s) => s.tags.contains(606)).toList();
   List<SoundModel> get stressReliefSounds => state.allSounds.where((s) => s.tags.contains(707)).toList();
   List<SoundModel> get healingBodySounds => state.allSounds.where((s) => s.tags.contains(808)).toList();
+  List<SoundModel> get topPicksAll => state.topPicksAll;
+
+  void makeTopPicks() {
+    // Shuffle and pick 5 random sounds
+    final randomSounds = List<SoundModel>.from(state.allSounds)..shuffle();
+    final topPicksAll = randomSounds.take(50).toList();
+    final topPicks = topPicksAll.take(5).toList();
+    state = state.copyWith(
+      topPicks: topPicks,
+      topPicksAll: topPicksAll,
+    );
+    print('[HomeViewModel] Top picks made: ${topPicks.length} from ${topPicksAll.length} total sounds');
+  }
 }
 
 class SystemSoundsModel {

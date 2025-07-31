@@ -90,7 +90,6 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
   @override
   Widget build(BuildContext context) {
     final recordingState = ref.read(recordingViewModelProvider);
-    print('View: build method, recordingState.value?.selectedScene: ${recordingState.value?.selectedScene}');
     final screenWidth = MediaQuery.of(context).size.width;
     final buttonSize = screenWidth * 0.61;
     // Listen to frequency updates while scanning

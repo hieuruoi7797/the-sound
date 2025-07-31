@@ -4,7 +4,6 @@ class TopPickCard extends StatelessWidget {
   final String title;
   final String artist;
   final String imageUrl;
-  final int playCount;
   final VoidCallback? onTap;
 
   const TopPickCard({
@@ -12,7 +11,6 @@ class TopPickCard extends StatelessWidget {
     required this.title,
     required this.artist,
     required this.imageUrl,
-    required this.playCount,
     this.onTap,
   });
 
@@ -84,36 +82,6 @@ class TopPickCard extends StatelessWidget {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.play_arrow,
-                      color: Colors.white.withOpacity(0.9),
-                      size: 12,
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      _formatPlayCount(playCount),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                      ),
                     ),
                   ],
                 ),

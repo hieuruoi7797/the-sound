@@ -135,8 +135,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Consumer(
                     builder: (context, ref, _) {
                       final homeViewModel = ref.read(homeViewModelProvider.notifier);
-                      final soundPlayerState = ref.watch(soundPlayerProvider);
-                      final soundPlayerNotifier = ref.read(soundPlayerProvider.notifier);
                       final modes = [
                         {
                           'title': 'Easy Sleep',
@@ -221,48 +219,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 24),
 
                   // Top Picks
-                  const Text(
-                    'Top Picks',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Top Picks',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/modeSounds', arguments: {
+                          'title': 'Top Picks',
+                          'tag': 000, // Assuming 101 is the tag for top picks
+                        }),
+                        child: const Text(
+                          'See all',
+                          style: TextStyle(
+                            color: Color(0xFF7E7B8F),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.14,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        TopPickCard(
-                          onTap: () => ref.read(soundPlayerProvider.notifier).showPlayer(
-                            sound: SoundModel(
-                              title: 'AAA',
-                              url_avatar: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-                              url: 'https://drive.google.com/file/d/1yGdpJIWuDKff_hChF1XGUj4YSoE0E2xJ/view?usp=sharing',
-                              description: '',
-                              tags: const []),
-                          ),
-                          title: 'Ocean Waves',
-                          artist: 'Nature Sounds',
-                          imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-                          playCount: 1250000,
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final homeState = ref.watch(homeViewModelProvider);
+                      final soundPlayerNotifier = ref.read(soundPlayerProvider.notifier);
+
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.14,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: homeState.topPicks.length,
+                          itemBuilder: (context,index) {
+                            final sound = homeState.topPicks[index];
+                            return TopPickCard(
+                              onTap: () => soundPlayerNotifier.showPlayer(sound: sound),
+                              title: sound.title,
+                              artist: '', // Use appropriate field if available
+                              imageUrl: soundPlayerNotifier.googleDriveToDirect(sound.url_avatar)
+                            );
+                          },
                         ),
-                        const TopPickCard(
-                          title: 'Rain Forest',
-                          artist: 'Ambient Nature',
-                          imageUrl: 'https://images.unsplash.com/photo-1511497584788-876760111969',
-                          playCount: 890000,
-                        ),
-                        const TopPickCard(
-                          title: 'White Noise',
-                          artist: 'Sleep Sounds',
-                          imageUrl: 'https://images.unsplash.com/photo-1511295742362-92c96b1cf484',
-                          playCount: 750000,
-                        ),
-                      ],
-                    ),
+                      );
+                    }
                   ),
                   const SizedBox(height: 80), // Space for mini player
                 ],

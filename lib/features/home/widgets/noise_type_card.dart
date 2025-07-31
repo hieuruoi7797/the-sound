@@ -25,7 +25,7 @@ class NoiseTypeCard extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              // color: color.withOpacity(0.2),
               borderRadius: BorderRadius.circular(100),
             ),
             child: () {

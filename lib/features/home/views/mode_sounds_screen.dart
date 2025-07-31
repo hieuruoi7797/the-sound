@@ -21,6 +21,9 @@ class ModeSoundsScreen extends ConsumerWidget {
     final soundPlayerNotifier = ref.read(soundPlayerProvider.notifier);
     List<SoundModel> sounds;
     switch (tag) {
+      case 000:
+        sounds = homeViewModel.topPicksAll;
+        break;
       case 202:
         sounds = homeViewModel.sleepSounds;
         break;
