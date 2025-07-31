@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/assets.dart'; // Make sure this contains recording_banner.png path
 import '../../../../core/routes/route_names.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/sizes.dart';
@@ -25,13 +26,10 @@ class EnvironmentScanBanner extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors:[
-              Color(0xFF00000099), 
-              Color(0xFF00000000),
-            ]),
+          image: DecorationImage(
+            image: AssetImage('assets/images/recording_banner.png'), // recording_banner.png
+            fit: BoxFit.cover,
+          ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: Colors.white.withOpacity(0.08),
@@ -44,6 +42,17 @@ class EnvironmentScanBanner extends StatelessWidget {
               offset: const Offset(0, 4),
             ),
           ],
+        ),
+        foregroundDecoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFF00000099),
+              const Color(0xFF00000000),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Align(
           alignment: Alignment.bottomCenter,
@@ -75,4 +84,4 @@ class EnvironmentScanBanner extends StatelessWidget {
       ),
     );
   }
-} 
+}

@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'dart:math';
+import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../home/viewmodels/home_view_model.dart';
+import '../../sound_player/models/sound_model.dart';
 import '../services/recording_service.dart';
 import '../../../data/realtime_database_service.dart';
 
@@ -10,15 +14,17 @@ final realtimeDatabaseServiceProvider = Provider((ref) => RealtimeDatabaseServic
 final recordingViewModelProvider =
     StateNotifierProvider<RecordingViewModel, AsyncValue<RecordingState>>((ref) {
   final service = ref.watch(recordingServiceProvider);
-  return RecordingViewModel(service);
+  return RecordingViewModel(service, ref);
 });
 
 class RecordingState {
   final bool isRecording;
-  final List<double> frequencies;
+  final List<int> frequencies;
   final bool hasPermission;
   final String? frequencyDescription;
   final String? selectedScene;
+  final List<SoundModel>? recommendedTunes;
+  final double? avgFrequency;
 
   RecordingState({
     this.isRecording = false,
@@ -26,14 +32,18 @@ class RecordingState {
     this.hasPermission = false,
     this.frequencyDescription,
     this.selectedScene,
+    this.recommendedTunes = const [],
+    this.avgFrequency,
   });
 
   RecordingState copyWith({
     bool? isRecording,
-    List<double>? frequencies,
+    List<int>? frequencies,
     bool? hasPermission,
     String? frequencyDescription,
     String? selectedScene,
+    List<SoundModel>? recommendedTunes,
+    double? avgFrequency,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
@@ -41,18 +51,22 @@ class RecordingState {
       hasPermission: hasPermission ?? this.hasPermission,
       frequencyDescription: frequencyDescription ?? this.frequencyDescription,
       selectedScene: selectedScene,
+      recommendedTunes: recommendedTunes,
+      avgFrequency: avgFrequency ?? this.avgFrequency,
     );
   }
 }
 
 class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
   final RecordingService _service;
-  StreamSubscription<double>? _frequencySubscription;
+  StreamSubscription<int>? _frequencySubscription;
 
-  RecordingViewModel(this._service)
+  RecordingViewModel(this._service, this.ref)
       : super(AsyncValue.data(RecordingState())) {
     _checkPermission();
   }
+  final Ref ref;
+
 
   Future<void> _checkPermission() async {
     try {
@@ -97,27 +111,27 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
           frequencyDescription: null,
           selectedScene: null,
         ));
-        print('ViewModel: Scan started, selectedScene: ${state.value?.selectedScene}');
+        print('ViewModel: Scan started, selectedScene: ${currentState.selectedScene}');
         return;
       } else {
         await _service.stopRecording();
         await _frequencySubscription?.cancel();
 
-        double? avgFrequency;
+        // double? avgFrequency;
         String? description;
 
         if (currentState.frequencies.isNotEmpty) {
-          avgFrequency = currentState.frequencies.reduce((a, b) => a + b) / currentState.frequencies.length;
-          description = await _service.getFrequencyDescription(avgFrequency);
+          await updateFrequenciesRange(state.value?.avgFrequency?.toInt()??0);
+          // avgFrequency = currentState.frequencies.reduce((a, b) => a + b) / currentState.frequencies.length;
+          description = await _service.getFrequencyDescription(state.value?.avgFrequency ?? 0.0);
         }
 
         state = AsyncValue.data(currentState.copyWith(
           isRecording: false,
-          frequencies: [],
           frequencyDescription: description,
           selectedScene: null,
         ));
-        print('ViewModel: Scan stopped, selectedScene: ${state.value?.selectedScene}');
+        print('ViewModel: Scan stopped, selectedScene: ${currentState.selectedScene}');
       }
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
@@ -129,7 +143,7 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
       if (state.value == null) return;
       
       final currentState = state.value!;
-      final newFrequencies = List<double>.from(currentState.frequencies)
+      final newFrequencies = List<int>.from(currentState.frequencies)
         ..add(frequency);
       if (newFrequencies.length > 50) newFrequencies.removeAt(0);
       
@@ -167,15 +181,53 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
     await toggleRecording();
     return true;
   }
+  Future<void> updateFrequenciesRange(int frequency) async {
+    List<int> frequenciesRange = await _service.getFrequenciesRage(frequency);
+    if (state.value == null) return;
+    state = AsyncValue.data(state.value!.copyWith(frequencies: frequenciesRange));
+  }
 
   void updateSelectedScene(String? scene) {
     if (state.value == null) return;
-    state = AsyncValue.data(state.value!.copyWith(selectedScene: scene));
+    final allSounds = ref.read(homeViewModelProvider).allSounds;
+    final frequencies = state.value!.frequencies;
+    if (frequencies.isEmpty) return;
+    // Example: use min/max frequency as range
+    final minFreq = frequencies.reduce((a, b) => a < b ? a : b);
+    final maxFreq = frequencies.reduce((a, b) => a > b ? a : b);
+
+    // Filter sounds: first tag must be a number in [minFreq, maxFreq]
+    final filtered = allSounds.where((sound) {
+      if (sound.tags.isEmpty) return false;
+      final tagValue = double.tryParse(sound.tags.first.toString());
+      if (tagValue == null) return false;
+      return tagValue >= minFreq && tagValue <= maxFreq;
+    }).toList();
+
+    print('Filtered sounds: ${filtered.map((s) => s.title).toList()}');
+
+    final random = Random();
+    final List<SoundModel> shuffled = List.from(filtered)..shuffle(random);
+    final List<SoundModel> picked = shuffled.take(3).toList();
+    print('Picked recommended tunes: $scene ${picked.map((s) => s.title).toList()}');
+
+    state = AsyncValue.data(state.value!.copyWith(
+        selectedScene: scene,
+        recommendedTunes: picked,));
   }
 
   @override
   void dispose() {
     _frequencySubscription?.cancel();
     super.dispose();
+  }
+
+  void setAvgFrequency(double avgFrequency) {
+    if (state.value == null) return;
+    state = AsyncValue.data(state.value!.copyWith(avgFrequency: avgFrequency));
+  }
+
+  void showPlayer(SoundModel tune) {
+
   }
 } 

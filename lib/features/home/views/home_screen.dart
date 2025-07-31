@@ -105,16 +105,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             final iconUrl = soundPlayerNotifier.googleDriveToDirect(sound.url_avatar);
                             return GestureDetector(
                               onTap: () {
-                                final directUrl = soundPlayerNotifier.googleDriveToDirect(sound.url);
-                                final directAvtUrl = soundPlayerNotifier.googleDriveToDirect(sound.url_avatar);
                                 soundPlayerNotifier.showPlayer(
-                                  sound: SoundModel(
-                                    title: sound.title,
-                                    url_avatar: directAvtUrl,
-                                    url: directUrl,
-                                    description: sound.description,
-                                    tags: sound.tags,
-                                  ),
+                                  sound: sound,
                                 );
                               },
                               child: NoiseTypeCard(

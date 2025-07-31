@@ -31,6 +31,7 @@ class SoundPlayerUI extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLiked = ref.watch(soundPlayerProvider.select((s) => s.isLiked));
+    final state = ref.watch(soundPlayerProvider);
     return Scaffold(
       backgroundColor: const Color(0xFF5C576A),
       body: SafeArea(
@@ -95,9 +96,15 @@ class SoundPlayerUI extends ConsumerWidget {
                     ),
                   ),
                 // Circular avatar
+                // Example Flutter widget snippet
                 CircleAvatar(
                   radius: 120,
-                  backgroundImage: NetworkImage(sound?.url_avatar ?? ''),
+                  backgroundImage: NetworkImage(state.sound?.url_avatar??''),
+                  child: state.isLoading
+                      ? CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  )
+                      : null,
                 ),
                 const SizedBox(height: 40),
                 // Progress bar

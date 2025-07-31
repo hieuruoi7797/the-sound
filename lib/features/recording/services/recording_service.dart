@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:mytune/features/recording/viewmodels/recording_view_model.dart';
 import '../../../data/realtime_database_service.dart';
 import '../models/frequencies_data_model.dart';
 import 'dart:math';
@@ -51,10 +52,31 @@ class RecordingService {
     }
   }
 
-  Stream<double> get frequencyStream {
+  Stream<int> get frequencyStream {
     return eventChannel.receiveBroadcastStream().map((dynamic event) {
-      return event as double;
+       return (event as double).toInt();
     });
+  }
+
+  Future<List<int>> getFrequenciesRage(int frequency) async {
+    try {
+      final event = await _databaseService.readData("").first;
+      final data = event.snapshot.value;
+      if (data != null && data is Map<dynamic, dynamic>) {
+        final frequenciesData = FrequenciesDataModel.fromJson(Map<String, dynamic>.from(data));
+        for (var entry in frequenciesData.frequencies.entries) {
+          final freqModel = entry.value;
+          if (frequency >= freqModel.range[0] && frequency <= freqModel.range[1]) {
+            // Found a matching range, return the range
+            print('Found frequency range: ${freqModel.range}');
+            return [freqModel.range[0].toInt(), freqModel.range[1].toInt()];
+          }// Return the range as a list of integers
+        }
+      }
+    } catch (e) {
+      print('Error fetching frequency range: $e');
+    }
+    return [];
   }
 
   Future<String?> getFrequencyDescription(double frequency) async {

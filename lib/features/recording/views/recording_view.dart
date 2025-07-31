@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mytune/features/navigator/widgets/dark_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mytune/features/sound_player/models/sound_model.dart';
+import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
+import '../../sound_player/views/sound_player_ui.dart';
 import '../viewmodels/recording_view_model.dart';
 import 'dart:async';
 
@@ -16,14 +19,12 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
   int secondsLeft = 5;
   List<double> scanFrequencies = [];
   Timer? scanTimer;
-  double? avgFrequency;
 
   void startScan() async {
     setState(() {
       isScanning = true;
       secondsLeft = 5;
       scanFrequencies = [];
-      avgFrequency = null;
     });
     // Start recording if not already
     final notifier = ref.read(recordingViewModelProvider.notifier);
@@ -63,15 +64,17 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
     // Stop recording
     final notifier = ref.read(recordingViewModelProvider.notifier);
     final state = ref.read(recordingViewModelProvider);
+    if (scanFrequencies.isNotEmpty) {
+      double avgFrequency = scanFrequencies.reduce((a, b) => a + b) / scanFrequencies.length;
+      notifier.setAvgFrequency(avgFrequency);
+    } else {
+      notifier.setAvgFrequency(0);
+    }
     if (state.value != null && state.value!.isRecording) {
       await notifier.handleRecordButtonTap();
     }
     // Calculate average
-    if (scanFrequencies.isNotEmpty) {
-      avgFrequency = scanFrequencies.reduce((a, b) => a + b) / scanFrequencies.length;
-    } else {
-      avgFrequency = 0;
-    }
+
     setState(() {
       isScanning = false;
     });
@@ -86,31 +89,20 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
 
   @override
   Widget build(BuildContext context) {
-    final recordingState = ref.watch(recordingViewModelProvider);
+    final recordingState = ref.read(recordingViewModelProvider);
     print('View: build method, recordingState.value?.selectedScene: ${recordingState.value?.selectedScene}');
     final screenWidth = MediaQuery.of(context).size.width;
     final buttonSize = screenWidth * 0.61;
     // Listen to frequency updates while scanning
     if (isScanning && recordingState.value != null && recordingState.value!.frequencies.isNotEmpty) {
-      final lastFreq = recordingState.value!.frequencies.last;
+      final lastFreq = recordingState.value!.frequencies.last.toDouble();
       if (scanFrequencies.isEmpty || scanFrequencies.last != lastFreq) {
         scanFrequencies.add(lastFreq);
       }
     }
 
-    Color? glowColor;
-    if (!isScanning && avgFrequency != null) {
-      if (avgFrequency! > 6000) {
-        glowColor = Colors.redAccent;
-      } else if (avgFrequency! > 1000) {
-        glowColor = Colors.yellowAccent;
-      } else {
-        glowColor = Colors.greenAccent;
-      }
-    }
-
     // Conditional rendering based on scanning state
-    if (isScanning || avgFrequency == null) {
+    if (isScanning || recordingState.value?.avgFrequency == null) {
       // Original layout while scanning or before scan result
       return DarkScaffold(
         title: 'Environment Scan',
@@ -127,7 +119,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
                   child: _ScanButton(
                     isScanning: isScanning,
                     secondsLeft: secondsLeft,
-                    avgFrequency: avgFrequency,
+                    avgFrequency: recordingState.value?.avgFrequency,
                     buttonSize: buttonSize,
                     onTap: isScanning ? null : startScan,
                   ),
@@ -155,7 +147,17 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
       );
     } else {
       // Layout after scanning is complete and avgFrequency is available
-      return DarkScaffold(
+      return (ref.watch(soundPlayerProvider).showPlayer)?
+      SoundPlayerUI(
+        currentTime: ref.watch(soundPlayerProvider).currentTime,
+        isPlaying: ref.watch(soundPlayerProvider).isPlaying,
+        onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
+        onLike: () => ref.read(soundPlayerProvider.notifier).like(),
+        onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
+        onQueue: () {},
+        sound: ref.watch(soundPlayerProvider).sound,
+        totalDuration: ref.watch(soundPlayerProvider).timerDuration,
+      ):DarkScaffold(
         title: 'Environment Scan',
         body: Container(
           width: double.infinity,
@@ -172,7 +174,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
                   child: _ScanButton(
                     isScanning: isScanning,
                     secondsLeft: secondsLeft,
-                    avgFrequency: avgFrequency,
+                    avgFrequency: recordingState.value?.avgFrequency,
                     buttonSize: buttonSize,
                     onTap: isScanning ? null : startScan, // Keep tap to rescan?
                   ),
@@ -188,7 +190,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                _SonicReadingCard(avgFrequency: avgFrequency!, frequencyDescription: recordingState.value?.frequencyDescription),
+                _SonicReadingCard(avgFrequency: recordingState.value?.avgFrequency??0, frequencyDescription: recordingState.value?.frequencyDescription),
                 const SizedBox(height: 48.0),
                 recordingState.value?.selectedScene == null
                     ? Column(
@@ -205,6 +207,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
                           const SizedBox(height: 16.0),
                           _ChooseYourSceneGrid(onSceneSelected: (scene) {
                             ref.read(recordingViewModelProvider.notifier).updateSelectedScene(scene);
+                            setState(() {});
                           }),
                         ],
                       )
@@ -503,19 +506,14 @@ class _ChooseYourSceneGrid extends StatelessWidget {
   }
 }
 
-class _RecommendedTunesList extends StatelessWidget {
+class _RecommendedTunesList extends ConsumerWidget {
   // Placeholder data - replace with actual SoundModel list
-  final List<Map<String, dynamic>> recommendedTunes = [
-    {'name': 'Pink Noise', 'imageUrl': 'assets/images/pink_noise.png'}, // Example path
-    {'name': '528 Hz Healing', 'imageUrl': 'assets/images/healing_freq.png'}, // Example path
-    {'name': 'White Noise', 'imageUrl': 'assets/images/white_noise.png'}, // Example path
-    // Add more tunes here
-  ];
 
   _RecommendedTunesList({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+   final recommendedTunes = ref.watch(recordingViewModelProvider).value?.recommendedTunes ?? [];
     return SizedBox(
       height: 158.0, // Height for horizontal list items
       child: ListView.builder(
@@ -523,47 +521,50 @@ class _RecommendedTunesList extends StatelessWidget {
         itemCount: recommendedTunes.length,
         itemBuilder: (context, index) {
           final tune = recommendedTunes[index];
-          return Padding(
-            padding: const EdgeInsets.only(right: 16.0), // Spacing between items
-            child: Container(
-              width: 158.0,
-              height: 158.0,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16.0),
-                image: DecorationImage(
-                  image: AssetImage(tune['imageUrl']), // Use AssetImage for local assets
-                  fit: BoxFit.cover,
+          return GestureDetector(
+            onTap: () => ref.read(soundPlayerProvider.notifier).showPlayer(sound:tune),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16.0), // Spacing between items
+              child: Container(
+                width: 158.0,
+                height: 158.0,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.0),
+                  image: DecorationImage(
+                    image: NetworkImage(ref.read(soundPlayerProvider.notifier).googleDriveToDirect(tune.url_avatar)), // Use AssetImage for local assets
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-              child: Stack(
-                children: [
-                  // Optional overlay for text readability
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16.0),
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withOpacity(0.6),
-                          Colors.transparent,
-                        ],
+                child: Stack(
+                  children: [
+                    // Optional overlay for text readability
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16.0),
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.6),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    left: 12.0,
-                    bottom: 12.0,
-                    child: Text(
-                      tune['name'],
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    Positioned(
+                      left: 12.0,
+                      bottom: 12.0,
+                      child: Text(
+                        tune.title,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );

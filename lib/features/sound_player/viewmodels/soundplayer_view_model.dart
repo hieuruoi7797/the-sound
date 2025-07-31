@@ -21,6 +21,8 @@ class SoundPlayerState {
   final bool showPlayer;
   final bool isLiked;
   final Duration timerDuration;
+  final bool isLoading;
+
   SoundPlayerState({
     this.sound,
     this.currentTime = Duration.zero,
@@ -29,6 +31,7 @@ class SoundPlayerState {
     this.showPlayer = false,
     this.isLiked = false,
     this.timerDuration = Duration.zero,
+    this.isLoading = false,
   });
 
   SoundPlayerState copyWith({
@@ -39,6 +42,7 @@ class SoundPlayerState {
     bool? showPlayer,
     bool? isLiked,
     Duration? timerDuration,
+    bool? isLoading,
   }) {
     return SoundPlayerState(
       sound: sound ?? this.sound,
@@ -48,6 +52,7 @@ class SoundPlayerState {
       showPlayer: showPlayer ?? this.showPlayer,
       isLiked: isLiked ?? this.isLiked,
       timerDuration: timerDuration ?? this.timerDuration,
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 }
@@ -69,6 +74,8 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   List<SoundModel> _favorites = [];
   int fadeInSeconds = 0;
   int fadeOutSeconds = 0;
+  int _loadToken = 0;
+
 
   List<SoundModel> get favorites => List.unmodifiable(_favorites);
 
@@ -129,7 +136,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     }
   }
 
-  Future<void> setAudio(SoundModel? sound) async {
+  Future<void> setAudio(SoundModel? sound, int? loadToken) async {
     if (sound == null) return;
 
     _stopTimer?.cancel();
@@ -187,6 +194,9 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     await audioHandler.player.setAudioSource(playlist, initialPosition: Duration.zero);
 
     final totalPlaylistDuration = audioHandler.player.duration;
+
+    // Before updating state, check token
+    if (loadToken != _loadToken) return;
 
     state = state.copyWith(
       sound: sound,
@@ -283,22 +293,44 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   }
 
   void showPlayer({SoundModel? sound}) async {
-      final sw = Stopwatch()..start();
+    _loadToken++; // Increment load token to track latest request
+    final currentToken = _loadToken;
+    final sw = Stopwatch()..start();
+    if (sound != null) {
+      sound = SoundModel
+        (title: sound.title,
+          url_avatar: googleDriveToDirect(sound.url_avatar),
+          url: googleDriveToDirect(sound.url),
+          description: sound.description,
+          tags: sound.tags);
+      print("showPlayer called with sound: ${sound.title}");
+    } else {
+      print("showPlayer called with no sound.");
+    }
     if (state.sound == null && sound != null) {
-      await setAudio(sound);
+      state = state.copyWith(showPlayer: true, isLoading: true, sound: sound);
+      await setAudio(sound, currentToken);
+      state = state.copyWith(isLoading: false);
+      play();
     } else if (state.sound == null && sound == null) {
-      
       print("showPlayer called with no sound and no sound loaded.");
       return;
     } else if (state.sound != null && sound != null && state.sound != sound) {
+      state = state.copyWith(showPlayer: true, isLoading: true, sound: sound);
       print("Loading new sound: \\${sound.title}");
-      await setAudio(sound);
+      await setAudio(sound,currentToken);
+      state = state.copyWith(isLoading: false);
+      // Only update isLoading if this is the latest request
+      if (currentToken == _loadToken) {
+        state = state.copyWith(isLoading: false);
+        play();
+      }
+    } else {
+      state = state.copyWith(showPlayer: true);
+      play();
     }
     print('⏱ setUrl took: ${sw.elapsedMilliseconds} ms');
-    state = state.copyWith(showPlayer: true);
-    play();
   }
-
   @override
   void dispose() {
     _positionSub?.cancel();

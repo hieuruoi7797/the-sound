@@ -147,7 +147,7 @@ class _MyTuneViewState extends ConsumerState<MyTuneView> with SingleTickerProvid
           final sound = sounds[index];
           return GestureDetector(
             onTap: () {
-              ref.read(soundPlayerProvider.notifier).setAudio(sound);
+              ref.read(soundPlayerProvider.notifier).setAudio(sound,null);
             },
             child: Container(
               decoration: BoxDecoration(
