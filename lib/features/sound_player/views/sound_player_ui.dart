@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
+import '../../timer/views/timer_setting_view_stateful.dart';
 import '../models/sound_model.dart';
-import '../../timer/views/timer_setting_view.dart';
 
 class SoundPlayerUI extends ConsumerWidget {
   final SoundModel? sound;
@@ -137,20 +137,28 @@ class SoundPlayerUI extends ConsumerWidget {
                   children: [
                     _circleButton(
                       icon: Icons.timer,
+                      ref: ref,
                       onTap: () {
+                        !(state.isLoading)?
                         showModalBottomSheet(
                           context: context,
                           isScrollControlled: true,
                           builder: (BuildContext context) {
                             return const TimerSettingView();
                           },
-                        );
+                        ):null;
                         // Call the original onTimer callback if needed
                         // onTimer.call();
                       },
                     ),
-                    _circleButton(icon: isPlaying ? Icons.pause : Icons.play_arrow, onTap: onPlayPause),
-                    _circleButton(icon: Icons.queue_music, onTap: onQueue),
+                    _circleButton(
+                        icon: isPlaying ? Icons.pause : Icons.play_arrow,
+                        onTap: !(state.isLoading) ? onPlayPause : () {},
+                        ref: ref),
+                    _circleButton(
+                        icon: Icons.queue_music,
+                        onTap: !(state.isLoading)? onQueue : () {},
+                        ref: ref),
                   ],
                 ),
                 const Spacer(),
@@ -163,7 +171,7 @@ class SoundPlayerUI extends ConsumerWidget {
     );
   }
 
-  Widget _circleButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _circleButton({required IconData icon, required VoidCallback onTap, WidgetRef? ref}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -173,7 +181,7 @@ class SoundPlayerUI extends ConsumerWidget {
           shape: BoxShape.circle,
           color: Colors.black.withOpacity(0.2),
         ),
-        child: Icon(icon, color: Colors.white, size: 32),
+        child: Icon(icon, color: (ref?.watch(soundPlayerProvider).isLoading == true)? Colors.black12:Colors.white, size: 32),
       ),
     );
   }

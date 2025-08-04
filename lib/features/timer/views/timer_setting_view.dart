@@ -14,13 +14,14 @@ class TimerSettingView extends ConsumerWidget {
     final selectedFadeOutDuration = ref.watch(fadeOutSettingViewModelProvider);
     final timerViewModel = ref.watch(timerSettingViewModelProvider);
     final timerViewModelNotifier = ref.read(timerSettingViewModelProvider.notifier);
-
-    // Determine initial selection for pickers based on current timerViewModel state
-    final int initialHours = timerViewModel.inHours;
-    final int initialMinutes = timerViewModel.inMinutes.remainder(60);
+    final _hoursScrollController = FixedExtentScrollController(
+      initialItem: timerViewModel.inHours,
+    );
+    final _minutesScrollController = FixedExtentScrollController(
+      initialItem: timerViewModel.inMinutes,
+    );
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8, // Adjust height as needed
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor, // Use scaffold background color
         borderRadius: BorderRadius.only(
@@ -62,7 +63,7 @@ class TimerSettingView extends ConsumerWidget {
                         width: 80, // Adjust width
                         child: CupertinoPicker(
                           itemExtent: 40, // Height of each item
-                          scrollController: FixedExtentScrollController(initialItem: initialHours), // Set initial item
+                          scrollController: _hoursScrollController, // Set initial item
                           onSelectedItemChanged: (int index) {
                             timerViewModelNotifier.updateHours(index);
                           },
@@ -78,7 +79,7 @@ class TimerSettingView extends ConsumerWidget {
                         width: 80, // Adjust width
                         child: CupertinoPicker(
                           itemExtent: 40, // Height of each item
-                          scrollController: FixedExtentScrollController(initialItem: initialMinutes), // Set initial item
+                          scrollController: _minutesScrollController, // Set initial item
                           onSelectedItemChanged: (int index) {
                             timerViewModelNotifier.updateMinutes(index);
                           },
@@ -135,28 +136,28 @@ class TimerSettingView extends ConsumerWidget {
                       leading: Icon(Icons.volume_down), // Replace with fade-out icon if available
                       title: Text('Fade Out'),
                       trailing: Row(
-                         mainAxisSize: MainAxisSize.min,
-                         children: [
-                           Text('${selectedFadeOutDuration.inSeconds} seconds', style: Theme.of(context).textTheme.bodyMedium), // Display selected duration
-                           Icon(Icons.chevron_right), // Arrow icon
-                         ],
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('${selectedFadeOutDuration.inSeconds} seconds', style: Theme.of(context).textTheme.bodyMedium), // Display selected duration
+                          Icon(Icons.chevron_right), // Arrow icon
+                        ],
                       ), // Arrow icon
                       onTap: () {
                         // Navigate to Fade Out setting screen
-                         Navigator.push(
-                           context,
-                           MaterialPageRoute(builder: (context) => FadeOutSettingView()),
-                         );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => FadeOutSettingView()),
+                        );
                       },
                     ),
                   ),
                 ),
-                 // Optional: Add a description below the Fade Out tile
+                // Optional: Add a description below the Fade Out tile
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                   child: Text(
-                     'Slowly lower the volume at the end of playback to avoid abrupt stops',
-                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey), // Use a smaller text style with grey color
+                    'Slowly lower the volume at the end of playback to avoid abrupt stops',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey), // Use a smaller text style with grey color
                   ),
                 ),
               ],
@@ -165,7 +166,8 @@ class TimerSettingView extends ConsumerWidget {
         ],
       ),
     );
-  }
+  }// This state class can be used for additional state management if needed// Currently, it does not have any specific functionality
+}
 
    Widget _buildTimerPresetButton(BuildContext context, WidgetRef ref, Duration duration, String value, String unit) {
      // TODO: Implement the look and feel of the preset buttons from the image
@@ -191,4 +193,3 @@ class TimerSettingView extends ConsumerWidget {
        ),
      );
    }
-} 
