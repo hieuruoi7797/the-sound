@@ -1,0 +1,2 @@
+/Users/hieutt/flutter_mvvm_app/android/app/.cxx/RelWithDebInfo/3a4lb714/x86/CMakeFiles/edit_cache.dir
+/Users/hieutt/flutter_mvvm_app/android/app/.cxx/RelWithDebInfo/3a4lb714/x86/CMakeFiles/rebuild_cache.dir
