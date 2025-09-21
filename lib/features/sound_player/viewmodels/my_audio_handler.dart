@@ -80,17 +80,6 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     await player.setVolume(0.0);
   }
 
-  Future<void> playMedia(String url, {String? title, String? artUri}) async {
-    await player.setUrl(url);
-    mediaItem.add(MediaItem(
-      id: url,
-      title: title ?? 'Audio',
-      artUri: artUri != null ? Uri.parse(artUri) : null,
-      duration: player.duration,
-    ));
-    play();
-  }
-
   @override
   Future<void> play() async {
     await player.play();

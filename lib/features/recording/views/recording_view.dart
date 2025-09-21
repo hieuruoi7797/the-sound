@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mytune/features/navigator/widgets/dark_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mytune/features/sound_player/models/sound_model.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
 import '../../sound_player/views/sound_player_ui.dart';
 import '../viewmodels/recording_view_model.dart';
@@ -26,29 +25,28 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
       secondsLeft = 5;
       scanFrequencies = [];
     });
-    // Start recording if not already
+    
     final notifier = ref.read(recordingViewModelProvider.notifier);
-    final state = ref.read(recordingViewModelProvider);
-    if (state.value == null || !state.value!.isRecording) {
-      final success = await notifier.handleRecordButtonTap();
-      if (!success && context.mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Permission Denied'),
-            content: const Text('Microphone permission is required to record.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-                  ),
-                ],
-              ),
-            );
-        setState(() { isScanning = false; });
-        return;
-      }
+    final success = await notifier.startScan();
+    
+    if (!success && context.mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Permission Denied'),
+          content: const Text('Microphone permission is required to record.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      setState(() { isScanning = false; });
+      return;
     }
+    
     scanTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         secondsLeft--;
@@ -58,6 +56,20 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
         finishScan();
       }
     });
+  }
+
+  Future<void> cancelScan() async {
+    print('View: cancelScan called');
+    scanTimer?.cancel();
+    await ref.read(recordingViewModelProvider.notifier).cancelScan();
+    if (mounted) {
+      setState(() {
+        isScanning = false;
+        scanFrequencies = [];
+        secondsLeft = 5;
+      });
+    }
+    print('View: cancelScan completed, isScanning: $isScanning');
   }
 
   void finishScan() async {
@@ -89,7 +101,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
 
   @override
   Widget build(BuildContext context) {
-    final recordingState = ref.read(recordingViewModelProvider);
+    final recordingState = ref.watch(recordingViewModelProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final buttonSize = screenWidth * 0.61;
     // Listen to frequency updates while scanning
@@ -99,9 +111,10 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
         scanFrequencies.add(lastFreq);
       }
     }
+    print('hieuttcheck: isScanning: $isScanning, avgFrequency: ${recordingState.value?.avgFrequency}, selectedScene: ${recordingState.value?.selectedScene}');
 
     // Conditional rendering based on scanning state
-    if (isScanning || recordingState.value?.avgFrequency == null) {
+    if (isScanning) {
       // Original layout while scanning or before scan result
       return DarkScaffold(
         title: 'Environment Scan',
@@ -112,41 +125,30 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
             color: Color(0xFF141318),
           ),
           child: SafeArea(
-            child: Stack(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Center(
-                  child: _ScanButton(
-                    isScanning: isScanning,
-                    secondsLeft: secondsLeft,
-                    avgFrequency: recordingState.value?.avgFrequency,
-                    buttonSize: buttonSize,
-                    onTap: isScanning ? null : startScan,
-                  ),
+                _ScanButton(
+                  isScanning: isScanning,
+                  secondsLeft: secondsLeft,
+                  avgFrequency: recordingState.value?.avgFrequency,
+                  buttonSize: buttonSize,
+                  onTap: isScanning ? null : startScan,
                 ),
-                // Home Indicator
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 12,
-                  child: Center(
-                    child: Container(
-                      width: 120,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
-                  ),
-                ),
+                if (isScanning) ...[
+                  const SizedBox(height: 16.0),
+                  _CancelButton(onTap: cancelScan),
+                ],
               ],
             ),
           ),
         ),
       );
     } else {
-      // Layout after scanning is complete and avgFrequency is available
-      return (ref.watch(soundPlayerProvider).showPlayer)?
+      // Layout when not scanning - show results if available, otherwise show initial state
+      if (recordingState.value?.avgFrequency != null) {
+        // Layout after scanning is complete and avgFrequency is available
+        return (ref.watch(soundPlayerProvider).showPlayer)?
       SoundPlayerUI(
         currentTime: ref.watch(soundPlayerProvider).currentTime,
         isPlaying: ref.watch(soundPlayerProvider).isPlaying,
@@ -234,6 +236,33 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
           ),
         ),
       );
+      } else {
+        // Layout when avgFrequency is null (after cancel or initial state)
+        return DarkScaffold(
+          title: 'Environment Scan',
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFF141318),
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _ScanButton(
+                    isScanning: isScanning,
+                    secondsLeft: secondsLeft,
+                    avgFrequency: recordingState.value?.avgFrequency,
+                    buttonSize: buttonSize,
+                    onTap: isScanning ? null : startScan,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
     }
   }
 }
@@ -254,6 +283,7 @@ class _ScanButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('_ScanButton: isScanning: $isScanning, avgFrequency: $avgFrequency');
     Color? glowColor;
     if (!isScanning && avgFrequency != null) {
       if (avgFrequency! > 6000) {
@@ -403,8 +433,8 @@ class _SonicReadingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = screenWidth * 0.84;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final cardHeight = screenHeight * 0.16;
+    // final screenHeight = MediaQuery.of(context).size.height;
+    // final cardHeight = screenHeight * 0.16;
 
     Color borderColor = Colors.transparent;
     if (avgFrequency > 1000 && avgFrequency <= 6000) {
@@ -508,7 +538,7 @@ class _ChooseYourSceneGrid extends StatelessWidget {
 class _RecommendedTunesList extends ConsumerWidget {
   // Placeholder data - replace with actual SoundModel list
 
-  _RecommendedTunesList({super.key});
+  const _RecommendedTunesList();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -601,6 +631,43 @@ class _ScanAgainButton extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CancelButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _CancelButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF2E2B3C),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          side: const BorderSide(color: Color(0x33FF6B6B), width: 1.0),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 14.0),
+        elevation: 0,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(Icons.close, size: 20),
+          SizedBox(width: 8.0),
+          Text(
+            'Cancel',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

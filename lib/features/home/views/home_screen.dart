@@ -57,31 +57,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Home',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          // Navigate to Profile/Settings
-                        },
-                        icon: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.person,
+                      // const SizedBox(),
+                      Container(
+                        margin: const EdgeInsets.only(top: 16),
+                        child: const Text(
+                          'Home',
+                          style: TextStyle(
                             color: Colors.white,
-                            size: 20,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
+                      const SizedBox(),
+                      // IconButton(
+                      //   onPressed: () {
+                      //     // Navigate to Profile/Settings
+                      //   },
+                      //   icon: Container(
+                      //     padding: const EdgeInsets.all(8),
+                      //     decoration: BoxDecoration(
+                      //       color: Colors.white.withOpacity(0.1),
+                      //       shape: BoxShape.circle,
+                      //     ),
+                      //     child: const Icon(
+                      //       Icons.person,
+                      //       color: Colors.white,
+                      //       size: 20,
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -142,20 +147,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           'icon': Icons.nightlight_round,
                           'color': Color(0xFF7B61FF),
                           'sounds': homeViewModel.sleepSounds,
+                          'assetSvg': Assets.easySleep,
                         },
                         {
-                          'title': 'Relaxation',
+                          'title': 'Relax',
                           'description': 'Reduce stress',
                           'icon': Icons.spa,
                           'color': Color(0xFFFF6161),
                           'sounds': homeViewModel.relaxSounds,
+                          'assetSvg': Assets.relax,
                         },
                         {
-                          'title': 'Meditate',
+                          'title': 'Stress Relief',
                           'description': 'Find your center',
                           'icon': Icons.self_improvement,
                           'color': Color(0xFF61A3FF),
-                          'sounds': homeViewModel.meditateSounds,
+                          'sounds': homeViewModel.stressReliefSounds,
+                          'assetSvg': Assets.stress_relief,
                         },
                         {
                           'title': 'Deep Work',
@@ -163,6 +171,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           'icon': Icons.psychology,
                           'color': Color(0xFF61A3FF),
                           'sounds': homeViewModel.deepworkSounds,
+                          'assetSvg': Assets.deep_work,
                         },
                         {
                           'title': 'Energy Boost',
@@ -170,24 +179,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           'icon': Icons.bolt,
                           'color': Color(0xFFFFC300),
                           'sounds': homeViewModel.energyBoostSounds,
+                          'assetSvg': Assets.energy_boost,
                         },
                         {
-                          'title': 'Stress Relief',
+                          'title': 'Meditate',
                           'description': 'Let go of tension',
                           'icon': Icons.sentiment_satisfied,
                           'color': Color(0xFF00C896),
-                          'sounds': homeViewModel.stressReliefSounds,
+                          'sounds': homeViewModel.meditateSounds,
+                          'assetSvg': Assets.meditate,
                         },
                         {
-                          'title': 'Healing Body',
+                          'title': 'Body Healing',
                           'description': 'Restore and heal',
                           'icon': Icons.healing,
                           'color': Color(0xFFB388FF),
                           'sounds': homeViewModel.healingBodySounds,
+                          'assetSvg': Assets.body_healing,
                         },
                       ];
                       return SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.1,
+                        height: MediaQuery.of(context).size.height * 0.13,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: modes.length,
@@ -205,10 +217,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 );
                               },
                               child: DailyModeCard(
-                                title: mode['title'] as String,
-                                description: mode['description'] as String,
-                                icon: mode['icon'] as IconData,
-                                color: mode['color'] as Color,
+                                assetSvg: mode['assetSvg'] as String,
                               ),
                             );
                           },

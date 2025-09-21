@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../home/viewmodels/home_view_model.dart';
 import '../../sound_player/models/sound_model.dart';
@@ -44,6 +43,7 @@ class RecordingState {
     String? selectedScene,
     List<SoundModel>? recommendedTunes,
     double? avgFrequency,
+    bool clearAvgFrequency = false,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
@@ -52,7 +52,7 @@ class RecordingState {
       frequencyDescription: frequencyDescription ?? this.frequencyDescription,
       selectedScene: selectedScene,
       recommendedTunes: recommendedTunes,
-      avgFrequency: avgFrequency ?? this.avgFrequency,
+      avgFrequency: clearAvgFrequency ? null : (avgFrequency ?? this.avgFrequency),
     );
   }
 }
@@ -65,6 +65,7 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
       : super(AsyncValue.data(RecordingState())) {
     _checkPermission();
   }
+
   final Ref ref;
 
 
@@ -97,6 +98,7 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
     await _requestPermission();
   }
 
+
   Future<void> toggleRecording() async {
     if (state.value == null) return;
 
@@ -111,7 +113,8 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
           frequencyDescription: null,
           selectedScene: null,
         ));
-        print('ViewModel: Scan started, selectedScene: ${currentState.selectedScene}');
+        print('ViewModel: Scan started, selectedScene: ${currentState
+            .selectedScene}');
         return;
       } else {
         await _service.stopRecording();
@@ -121,9 +124,10 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
         String? description;
 
         if (currentState.frequencies.isNotEmpty) {
-          await updateFrequenciesRange(state.value?.avgFrequency?.toInt()??0);
+          await updateFrequenciesRange(state.value?.avgFrequency?.toInt() ?? 0);
           // avgFrequency = currentState.frequencies.reduce((a, b) => a + b) / currentState.frequencies.length;
-          description = await _service.getFrequencyDescription(state.value?.avgFrequency ?? 0.0);
+          description = await _service.getFrequencyDescription(
+              state.value?.avgFrequency ?? 0.0);
         }
 
         state = AsyncValue.data(currentState.copyWith(
@@ -131,7 +135,8 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
           frequencyDescription: description,
           selectedScene: null,
         ));
-        print('ViewModel: Scan stopped, selectedScene: ${currentState.selectedScene}');
+        print('ViewModel: Scan stopped, selectedScene: ${currentState
+            .selectedScene}');
       }
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
@@ -141,12 +146,12 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
   void _startListeningFrequency() {
     _frequencySubscription = _service.frequencyStream.listen((frequency) {
       if (state.value == null) return;
-      
+
       final currentState = state.value!;
       final newFrequencies = List<int>.from(currentState.frequencies)
         ..add(frequency);
       if (newFrequencies.length > 50) newFrequencies.removeAt(0);
-      
+
       state = AsyncValue.data(currentState.copyWith(
         frequencies: newFrequencies,
       ));
@@ -181,15 +186,19 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
     await toggleRecording();
     return true;
   }
+
   Future<void> updateFrequenciesRange(int frequency) async {
     List<int> frequenciesRange = await _service.getFrequenciesRage(frequency);
     if (state.value == null) return;
-    state = AsyncValue.data(state.value!.copyWith(frequencies: frequenciesRange));
+    state =
+        AsyncValue.data(state.value!.copyWith(frequencies: frequenciesRange));
   }
 
   void updateSelectedScene(String? scene) {
     if (state.value == null) return;
-    final allSounds = ref.read(homeViewModelProvider).allSounds;
+    final allSounds = ref
+        .read(homeViewModelProvider)
+        .allSounds;
     final frequencies = state.value!.frequencies;
     if (frequencies.isEmpty) return;
     // Example: use min/max frequency as range
@@ -207,13 +216,16 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
     print('Filtered sounds: ${filtered.map((s) => s.title).toList()}');
 
     final random = Random();
-    final List<SoundModel> shuffled = List.from(filtered)..shuffle(random);
+    final List<SoundModel> shuffled = List.from(filtered)
+      ..shuffle(random);
     final List<SoundModel> picked = shuffled.take(3).toList();
-    print('Picked recommended tunes: $scene ${picked.map((s) => s.title).toList()}');
+    print('Picked recommended tunes: $scene ${picked
+        .map((s) => s.title)
+        .toList()}');
 
     state = AsyncValue.data(state.value!.copyWith(
-        selectedScene: scene,
-        recommendedTunes: picked,));
+      selectedScene: scene,
+      recommendedTunes: picked,));
   }
 
   @override
@@ -230,4 +242,42 @@ class RecordingViewModel extends StateNotifier<AsyncValue<RecordingState>> {
   void showPlayer(SoundModel tune) {
 
   }
-} 
+
+
+  Future<bool> startScan() async {
+    if (state.value == null) return false;
+
+    try {
+      // Start recording if not already
+      if (!state.value!.isRecording) {
+        final success = await handleRecordButtonTap();
+        if (!success) {
+          return false;
+        }
+      }
+      return true;
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+      return false;
+    }
+  }
+
+  Future<void> cancelScan() async {
+    print('ViewModel: cancelScan called');
+    try {
+      await _service.stopRecording();
+      await _frequencySubscription?.cancel();
+    } catch (_) {}
+    if (state.value != null) {
+      state = AsyncValue.data(state.value!.copyWith(
+        isRecording: false,
+        frequencies: [],
+        frequencyDescription: null,
+        selectedScene: null,
+        recommendedTunes: const [],
+        clearAvgFrequency: true,
+      ));
+      print('ViewModel: cancelScan completed, avgFrequency set to null');
+    }
+  }
+}
