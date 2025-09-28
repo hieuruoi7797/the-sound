@@ -48,6 +48,18 @@ class ModeSoundsScreen extends ConsumerWidget {
       default:
         sounds = [];
     }
+    if (soundPlayerState.showPlayer) {
+      return SoundPlayerUI(
+        currentTime: soundPlayerState.currentTime,
+        isPlaying: soundPlayerState.isPlaying,
+        onCollapse: () => soundPlayerNotifier.collapse(),
+        onLike: () => soundPlayerNotifier.like(),
+        onPlayPause: () => soundPlayerNotifier.togglePlayPause(),
+        onQueue: () {},
+        sound: soundPlayerState.sound,
+        totalDuration: soundPlayerState.timerDuration,
+      );
+    }
     return Scaffold(
       backgroundColor: const Color(0xFF141318),
       appBar: AppBar(
@@ -146,17 +158,6 @@ class ModeSoundsScreen extends ConsumerWidget {
                     soundPlayerNotifier.showPlayer();
                   },
                 ),
-              ),
-            if (soundPlayerState.showPlayer)
-              SoundPlayerUI(
-                currentTime: soundPlayerState.currentTime,
-                isPlaying: soundPlayerState.isPlaying,
-                onCollapse: () => soundPlayerNotifier.collapse(),
-                onLike: () => soundPlayerNotifier.like(),
-                onPlayPause: () => soundPlayerNotifier.togglePlayPause(),
-                onQueue: () {},
-                sound: soundPlayerState.sound,
-                totalDuration: soundPlayerState.timerDuration,
               ),
           ],
         ),

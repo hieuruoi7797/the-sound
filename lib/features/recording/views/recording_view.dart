@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mytune/features/navigator/widgets/dark_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
+import '../../home/widgets/scan_note_card.dart';
 import '../../sound_player/views/sound_player_ui.dart';
 import '../viewmodels/recording_view_model.dart';
 import 'dart:async';
@@ -136,7 +138,7 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
                   onTap: isScanning ? null : startScan,
                 ),
                 if (isScanning) ...[
-                  const SizedBox(height: 16.0),
+                  SizedBox(height: MediaQuery.of(context).size.height * (112/852)),
                   _CancelButton(onTap: cancelScan),
                 ],
               ],
@@ -257,6 +259,8 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
                     buttonSize: buttonSize,
                     onTap: isScanning ? null : startScan,
                   ),
+                  SizedBox(height: MediaQuery.of(context).size.height * (112/852)),
+                  const ScanNoteCard(),
                 ],
               ),
             ),
@@ -387,11 +391,8 @@ class _ScanButton extends StatelessWidget {
                       : Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.mic,
-                              color: Colors.white,
-                              size: buttonSize * 0.28,
-                            ),
+                            SvgPicture.asset("assets/icons/tap_to_scan.svg",
+                              width: 31, height: 31,),
                             const SizedBox(height: 12),
                             const Text(
                               'Tap to scan',

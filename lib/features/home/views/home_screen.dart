@@ -8,6 +8,7 @@ import '../widgets/noise_type_card.dart';
 import '../widgets/daily_mode_card.dart';
 import '../widgets/top_pick_card.dart';
 import '../widgets/mini_player.dart';
+import '../widgets/scan_note_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodels/home_view_model.dart';
 
@@ -105,20 +106,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: coloredNoises.length,
+                          padding: EdgeInsets.zero,
                           itemBuilder: (context, index) {
                             final sound = coloredNoises[index];
                             final iconUrl = soundPlayerNotifier.googleDriveToDirect(sound.url_avatar);
-                            return GestureDetector(
-                              onTap: () {
-                                soundPlayerNotifier.showPlayer(
-                                  sound: sound,
-                                );
-                              },
-                              child: NoiseTypeCard(
-                                title: sound.title,
-                                icon: iconUrl, // You can customize this based on sound
-                                color: Colors.white, // Or assign a color based on sound
-                              ),
+                            return Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    soundPlayerNotifier.showPlayer(
+                                      sound: sound,
+                                    );
+                                  },
+                                  child: NoiseTypeCard(
+                                    title: sound.title,
+                                    icon: iconUrl, // You can customize this based on sound
+                                    color: Colors.white, // Or assign a color based on sound
+                                  ),
+                                ),
+                                if (index != coloredNoises.length - 1)
+                                  const SizedBox(width: 16),
+                              ],
                             );
                           },
                         ),

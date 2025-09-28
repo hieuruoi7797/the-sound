@@ -312,9 +312,14 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
           url: googleDriveToDirect(sound.url),
           description: sound.description,
           tags: sound.tags);
-      print("showPlayer called with sound: ${sound.title}");
+      print("showPlayer called with sound: \\${sound.title}");
     } else {
       print("showPlayer called with no sound.");
+    }
+    // Prevent starting the same audio if already playing
+    if (state.sound != null && sound != null && state.sound?.url == sound.url && state.isPlaying) {
+      Fluttertoast.showToast(msg: "This audio is already playing.");
+      return;
     }
     if (state.sound == null && sound != null) {
       state = state.copyWith(showPlayer: true, isLoading: true, sound: sound);
@@ -338,7 +343,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
       state = state.copyWith(showPlayer: true);
       play();
     }
-    print('⏱ setUrl took: ${sw.elapsedMilliseconds} ms');
+    print('⏱ setUrl took: \\${sw.elapsedMilliseconds} ms');
   }
   @override
   void dispose() {
