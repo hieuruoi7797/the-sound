@@ -114,14 +114,22 @@ class SystemSoundsModel {
     final dynamic raw = json['system_sounds'];
     List<SoundModel> sounds = [];
     if (raw is List) {
-      sounds = raw
-          .whereType<Map<dynamic, dynamic>>()
-          .map((e) => SoundModel.fromJson(Map<String, dynamic>.from(e)))
+      // If the data is a list, use index as soundId
+      sounds = raw.asMap().entries
+          .where((entry) => entry.value is Map)
+          .map((entry) => SoundModel.fromJson(Map<String, dynamic>.from(entry.value), soundId: entry.key))
           .toList();
     } else if (raw is Map) {
-      sounds = (raw as Map).values
-          .whereType<Map<dynamic, dynamic>>()
-          .map((e) => SoundModel.fromJson(Map<String, dynamic>.from(e)))
+      // If the data is a map, use the last integer part of the key as soundId
+      sounds = raw.entries
+          .where((entry) => entry.value is Map)
+          .map((entry) {
+            final key = entry.key.toString();
+            // Lấy số cuối cùng sau dấu _ trong key, ví dụ sound_id_11 => 11
+            final match = RegExp(r'_(\d+)$').firstMatch(key);
+            final soundId = match != null ? int.parse(match.group(1)!) : 0;
+            return SoundModel.fromJson(Map<String, dynamic>.from(entry.value), soundId: soundId);
+          })
           .toList();
     }
     return SystemSoundsModel(sounds: sounds);

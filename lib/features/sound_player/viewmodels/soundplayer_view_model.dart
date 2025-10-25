@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:convert';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -14,6 +13,7 @@ import '../models/sound_model.dart';
 import '../../timer/viewmodels/timer_setting_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../settings/viewmodels/settings_view_model.dart';
+import 'package:mytune/core/network/network_providers.dart';
 
 class SoundPlayerState {
   final SoundModel? sound;
@@ -70,6 +70,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   MyAudioHandler audioHandler = MyAudioHandler();
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<PlayerState>? _playerStateSub;
+  VoidCallback? _connectivityListenerDispose;
   Timer? _stopTimer;
   Duration? _currentAudioDuration;
   VoidCallback? _timerListenerDispose;
@@ -84,12 +85,33 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   SoundPlayerViewModel(this._audioHandlerFuture, this._ref) : super(SoundPlayerState()) {
     _init();
     _listenToFadeSettings();
+    _listenToConnectivity();
   }
 
   Future<void> _init() async {
     audioHandler = await _audioHandlerFuture;
     _listenToTimerDurationChanges();
     await _loadFavorites();
+  }
+
+  void _listenToConnectivity() {
+    _connectivityListenerDispose?.call();
+    _connectivityListenerDispose = _ref.listen<AsyncValue<bool>>(
+      connectivityStatusProvider,
+      (prev, next) {
+        next.whenData((isConnected) {
+          if (isConnected) {
+            print('[SoundPlayer] Internet connection restored, processing queue...');
+            _processQueuedRequests();
+          }
+        });
+      },
+    ).close;
+  }
+
+  void _processQueuedRequests() async {
+    final queueService = _ref.read(requestQueueServiceProvider);
+    await queueService.processQueue();
   }
 
   void _listenToTimerDurationChanges() {
@@ -143,21 +165,98 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
 
     _stopTimer?.cancel();
 
-    String directUrl = sound.url;
+    // Check connectivity before attempting to load
+    final connectivityService = _ref.read(connectivityServiceProvider);
+    final isConnected = await connectivityService.checkConnectivity();
+    
+    if (!isConnected) {
+      print('[SoundPlayer] No internet connection. Queuing audio request...');
+      final queueService = _ref.read(requestQueueServiceProvider);
+      
+      // Queue the request for retry when connection is restored
+      await queueService.queueRequest(
+        resourceType: 'audio',
+        resourceUrl: sound.url,
+        request: () => setAudio(sound, loadToken),
+      );
+      
+      // Show user feedback
+      Fluttertoast.showToast(
+        msg: "No internet connection. Audio queued for loading.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.orange,
+        textColor: Colors.white,
+      );
+      return;
+    }
 
+    String directUrl;
+    
+    try {
+      
+      // Tạo đường dẫn tới file trên Firebase Storage theo định dạng sounds/{soundId}.wav
+      final storagePath = 'sounds/${sound.soundId}.wav';
+      
+      try {
+        // Lấy download URL từ Firebase Storage
+        final ref = FirebaseStorage.instance.ref().child(storagePath);
+        directUrl = await ref.getDownloadURL();
+        print("Firebase Storage URL: $directUrl");
+      } catch (e) {
+        print("Error getting Firebase Storage URL: $e");
+        // Fallback to the original URL if Firebase Storage fails
+        directUrl = sound.url;
+        print("Fallback to original URL: $directUrl");
+      }
+    } catch (e) {
+      print("Firebase initialization error: $e");
+      
+      // Queue if error occurs (likely no connectivity)
+      final queueService = _ref.read(requestQueueServiceProvider);
+      await queueService.queueRequest(
+        resourceType: 'audio',
+        resourceUrl: sound.url,
+        request: () => setAudio(sound, loadToken),
+      );
+      
+      Fluttertoast.showToast(
+        msg: "Failed to load audio. Queued for retry.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.orange,
+        textColor: Colors.white,
+      );
+      return;
+    }
+    
     final tempPlayer = AudioPlayer();
     try {
-      ///USING FIREBASE STORAGE.
-      // await Firebase.initializeApp(); // rất quan trọng
-
-      // final ref = FirebaseStorage.instance.ref().child("14.wav");
-      // directUrl = await ref.getDownloadURL();
-      // print("hieuttcheck_URL: $directUrl");
       await tempPlayer.setUrl(directUrl);
        // Save to recents
       await _addToRecents(sound);
 
       _currentAudioDuration = tempPlayer.duration;
+    } on Exception catch (e) {
+      print('[SoundPlayer] Error loading audio URL: $e');
+      
+      // Queue if URL loading fails
+      final queueService = _ref.read(requestQueueServiceProvider);
+      await queueService.queueRequest(
+        resourceType: 'audio',
+        resourceUrl: directUrl,
+        request: () => setAudio(sound, loadToken),
+      );
+      
+      Fluttertoast.showToast(
+        msg: "Failed to load audio. Retrying...",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.orange,
+        textColor: Colors.white,
+      );
+      tempPlayer.dispose();
+      return;
     } finally {
       tempPlayer.dispose();
     }
@@ -300,22 +399,17 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     }
     return url;
   }
+  
+  // Hàm tạo đường dẫn Firebase Storage từ soundId
+  String getFirebaseStoragePath(int soundId) {
+    return 'sounds/$soundId.wav';
+  }
 
   void showPlayer({SoundModel? sound}) async {
+    print("Firebase Storage Path: ${sound != null ? getFirebaseStoragePath(sound.soundId) : 'null'}");
     _loadToken++; // Increment load token to track latest request
     final currentToken = _loadToken;
     final sw = Stopwatch()..start();
-    if (sound != null) {
-      sound = SoundModel
-        (title: sound.title,
-          url_avatar: googleDriveToDirect(sound.url_avatar),
-          url: googleDriveToDirect(sound.url),
-          description: sound.description,
-          tags: sound.tags);
-      print("showPlayer called with sound: \\${sound.title}");
-    } else {
-      print("showPlayer called with no sound.");
-    }
     // Prevent starting the same audio if already playing
     if (state.sound != null && sound != null && state.sound?.url == sound.url && state.isPlaying) {
       Fluttertoast.showToast(msg: "This audio is already playing.");
@@ -351,6 +445,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     _playerStateSub?.cancel();
     _stopTimer?.cancel();
     _timerListenerDispose?.call();
+    _connectivityListenerDispose?.call();
     audioHandler.player.dispose();
     super.dispose();
   }

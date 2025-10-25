@@ -31,6 +31,7 @@ class SoundPlayerUI extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLiked = ref.watch(soundPlayerProvider.select((s) => s.isLiked));
+    final soundPlayerNotifier = ref.read(soundPlayerProvider.notifier);
     final state = ref.watch(soundPlayerProvider);
     return Scaffold(
       backgroundColor: const Color(0xFF5C576A),
@@ -99,7 +100,10 @@ class SoundPlayerUI extends ConsumerWidget {
                 // Example Flutter widget snippet
                 CircleAvatar(
                   radius: 120,
-                  backgroundImage: NetworkImage(state.sound?.url_avatar??''),
+                  backgroundImage: NetworkImage(
+                      soundPlayerNotifier.googleDriveToDirect(
+                          state.sound?.url_avatar??'')
+                  ),
                   child: state.isLoading
                       ? CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),

@@ -8,6 +8,7 @@ import 'core/routes/route_names.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'core/widgets/connectivity_listener.dart';
 
 // Define a top-level named handler for background messages
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -122,6 +123,9 @@ class MyApp extends StatelessWidget {
       ],
       initialRoute: RouteNames.home,
       onGenerateRoute: AppRouter.generateRoute,
+      builder: (context, child) {
+        return ConnectivityListener(child: child!);
+      },
     );
   }
 }
