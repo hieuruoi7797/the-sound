@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mytune/core/constants/assets.dart';
 import 'package:mytune/core/constants/colors.dart';
 import 'package:mytune/core/constants/sizes.dart';
@@ -8,6 +7,8 @@ import 'package:mytune/core/widgets/custom_button.dart';
 import 'package:mytune/core/widgets/custom_text_field.dart';
 import 'package:mytune/features/auth/widgets/social_button.dart';
 import 'package:mytune/features/auth/widgets/social_divider.dart';
+
+import '../../../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(

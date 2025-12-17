@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
+import 'package:mytune/core/widgets/optimized_avatar_image.dart';
 import '../../timer/views/timer_setting_view_stateful.dart';
 import '../models/sound_model.dart';
 
@@ -12,7 +13,6 @@ class SoundPlayerUI extends ConsumerWidget {
   final VoidCallback onLike;
   final VoidCallback onPlayPause;
   // final VoidCallback onTimer;
-  final VoidCallback onQueue;
   final Duration totalDuration;
 
   const SoundPlayerUI({
@@ -24,7 +24,6 @@ class SoundPlayerUI extends ConsumerWidget {
     required this.onLike,
     required this.onPlayPause,
     // required this.onTimer,
-    required this.onQueue,
     required this.totalDuration,
   });
 
@@ -96,19 +95,36 @@ class SoundPlayerUI extends ConsumerWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                // Circular avatar
-                // Example Flutter widget snippet
-                CircleAvatar(
-                  radius: 120,
-                  backgroundImage: NetworkImage(
-                      soundPlayerNotifier.googleDriveToDirect(
-                          state.sound?.url_avatar??'')
-                  ),
-                  child: state.isLoading
-                      ? CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  )
-                      : null,
+                // Circular avatar with optimized loading
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        final convertedUrl = soundPlayerNotifier.googleDriveToDirect(
+                          state.sound?.url_avatar ?? ''
+                        );
+                        
+                        // Use the fixed OptimizedAvatarImage
+                        return OptimizedAvatarImage(
+                          imageUrl: convertedUrl,
+                          radius: 120,
+                        );
+                      },
+                    ),
+                    // if (state.isLoading)
+                    //   Container(
+                    //     width: 240,
+                    //     height: 240,
+                    //     decoration: BoxDecoration(
+                    //       color: Colors.black.withOpacity(0.3),
+                    //       shape: BoxShape.circle,
+                    //     ),
+                    //     child: const CircularProgressIndicator(
+                    //       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    //     ),
+                    //   ),
+                  ],
                 ),
                 const SizedBox(height: 40),
                 // Progress bar
@@ -158,10 +174,6 @@ class SoundPlayerUI extends ConsumerWidget {
                     _circleButton(
                         icon: isPlaying ? Icons.pause : Icons.play_arrow,
                         onTap: !(state.isLoading) ? onPlayPause : () {},
-                        ref: ref),
-                    _circleButton(
-                        icon: Icons.queue_music,
-                        onTap: !(state.isLoading)? onQueue : () {},
                         ref: ref),
                   ],
                 ),

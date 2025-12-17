@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mytune/core/constants/app_strings.dart';
+import 'package:mytune/core/services/image_preloader_service.dart';
 import 'package:mytune/features/sound_player/viewmodels/my_audio_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -24,6 +25,7 @@ class SoundPlayerState {
   final bool isLiked;
   final Duration timerDuration;
   final bool isLoading;
+  final bool userCollapsed;
 
   SoundPlayerState({
     this.sound,
@@ -34,6 +36,7 @@ class SoundPlayerState {
     this.isLiked = false,
     this.timerDuration = Duration.zero,
     this.isLoading = false,
+    this.userCollapsed = false,
   });
 
   SoundPlayerState copyWith({
@@ -45,6 +48,7 @@ class SoundPlayerState {
     bool? isLiked,
     Duration? timerDuration,
     bool? isLoading,
+    bool? userCollapsed,
   }) {
     return SoundPlayerState(
       sound: sound ?? this.sound,
@@ -55,6 +59,7 @@ class SoundPlayerState {
       isLiked: isLiked ?? this.isLiked,
       timerDuration: timerDuration ?? this.timerDuration,
       isLoading: isLoading ?? this.isLoading,
+      userCollapsed: userCollapsed ?? this.userCollapsed,
     );
   }
 }
@@ -267,7 +272,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
           sound: sound,
           totalDuration: Duration.zero,
           currentTime: Duration.zero,
-          showPlayer: true,
+          showPlayer: !state.userCollapsed,
           isPlaying: false,
         );
         return;
@@ -303,7 +308,7 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
       sound: sound,
       totalDuration: totalPlaylistDuration ?? Duration.zero,
       currentTime: Duration.zero,
-      showPlayer: true,
+      showPlayer: !state.userCollapsed, // Don't show if user collapsed
       isPlaying: false,
       timerDuration: currentTimerDuration,
       isLiked: isFavorite(sound),
@@ -361,7 +366,11 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
   }
 
   void collapse() {
-    state = state.copyWith(showPlayer: false);
+    state = state.copyWith(showPlayer: false, userCollapsed: true);
+  }
+
+  void expand() {
+    state = state.copyWith(showPlayer: true, userCollapsed: false);
   }
 
   void _listenToPosition() {
@@ -385,19 +394,41 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     });
   }
 
+  // Cache for converted URLs to avoid repeated processing
+  static final Map<String, String> _urlCache = {};
+
   String googleDriveToDirect(String url) {
-    final reg = RegExp(r"/d/([\w-]+)");
-    final match = reg.firstMatch(url);
-    if (match != null) {
-      final id = match.group(1);
-      return "https://drive.google.com/uc?export=download&id=$id";
+    // Return cached result if available
+    if (_urlCache.containsKey(url)) {
+      return _urlCache[url]!;
     }
-    final uri = Uri.parse(url);
-    final id = uri.queryParameters['id'];
-    if (id != null) {
-      return "https://drive.google.com/uc?export=download&id=$id";
+
+    String directUrl;
+    
+    // Check if it's already a direct URL
+    if (url.contains('drive.google.com/uc?') || !url.contains('drive.google.com')) {
+      directUrl = url;
+    } else {
+      // Convert Google Drive sharing URL to direct download URL
+      final reg = RegExp(r"/d/([\w-]+)");
+      final match = reg.firstMatch(url);
+      if (match != null) {
+        final id = match.group(1);
+        directUrl = "https://drive.google.com/uc?export=download&id=$id";
+      } else {
+        final uri = Uri.parse(url);
+        final id = uri.queryParameters['id'];
+        if (id != null) {
+          directUrl = "https://drive.google.com/uc?export=download&id=$id";
+        } else {
+          directUrl = url;
+        }
+      }
     }
-    return url;
+
+    // Cache the result
+    _urlCache[url] = directUrl;
+    return directUrl;
   }
   
   // Hàm tạo đường dẫn Firebase Storage từ soundId
@@ -405,39 +436,63 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     return 'sounds/$soundId.wav';
   }
 
-  void showPlayer({SoundModel? sound}) async {
+  void showPlayer({SoundModel? sound, BuildContext? context}) async {
     print("Firebase Storage Path: ${sound != null ? getFirebaseStoragePath(sound.soundId) : 'null'}");
+    
+    // If no sound provided, just expand the existing player
+    if (sound == null) {
+      state = state.copyWith(showPlayer: true, userCollapsed: false);
+      if (state.sound != null && !state.isPlaying) {
+        play();
+      }
+      return;
+    }
+    
     _loadToken++; // Increment load token to track latest request
     final currentToken = _loadToken;
     final sw = Stopwatch()..start();
+    
     // Prevent starting the same audio if already playing
-    if (state.sound != null && sound != null && state.sound?.url == sound.url && state.isPlaying) {
+    if (state.sound != null && state.sound?.url == sound.url && state.isPlaying) {
       Fluttertoast.showToast(msg: "This audio is already playing.");
       return;
     }
-    if (state.sound == null && sound != null) {
-      state = state.copyWith(showPlayer: true, isLoading: true, sound: sound);
+    
+    // Preload image if context is available
+    if (context != null && sound.url_avatar.isNotEmpty) {
+      final imageUrl = googleDriveToDirect(sound.url_avatar);
+      ImagePreloaderService().preloadImage(imageUrl, context).catchError((e) {
+        print('Failed to preload image: $e');
+      });
+    }
+    
+    // Loading new sound - show player initially but respect user collapse during loading
+    if (state.sound == null || state.sound != sound) {
+      state = state.copyWith(showPlayer: true, isLoading: true, sound: sound, userCollapsed: false);
+      print("Loading new sound: ${sound.title}");
       await setAudio(sound, currentToken);
-      state = state.copyWith(isLoading: false);
-      play();
-    } else if (state.sound == null && sound == null) {
-      print("showPlayer called with no sound and no sound loaded.");
-      return;
-    } else if (state.sound != null && sound != null && state.sound != sound) {
-      state = state.copyWith(showPlayer: true, isLoading: true, sound: sound);
-      print("Loading new sound: \\${sound.title}");
-      await setAudio(sound,currentToken);
-      state = state.copyWith(isLoading: false);
       // Only update isLoading if this is the latest request
       if (currentToken == _loadToken) {
         state = state.copyWith(isLoading: false);
         play();
       }
     } else {
-      state = state.copyWith(showPlayer: true);
+      state = state.copyWith(showPlayer: true, userCollapsed: false);
       play();
     }
-    print('⏱ setUrl took: \\${sw.elapsedMilliseconds} ms');
+    print('⏱ setUrl took: ${sw.elapsedMilliseconds} ms');
+  }
+
+  /// Preload images for a list of sounds
+  Future<void> preloadSoundImages(List<SoundModel> sounds, BuildContext context) async {
+    final imageUrls = sounds
+        .where((sound) => sound.url_avatar.isNotEmpty)
+        .map((sound) => googleDriveToDirect(sound.url_avatar))
+        .toList();
+    
+    if (imageUrls.isNotEmpty) {
+      await ImagePreloaderService().preloadImages(imageUrls, context);
+    }
   }
   @override
   void dispose() {

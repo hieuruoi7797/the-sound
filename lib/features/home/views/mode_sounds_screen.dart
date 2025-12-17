@@ -55,7 +55,6 @@ class ModeSoundsScreen extends ConsumerWidget {
         onCollapse: () => soundPlayerNotifier.collapse(),
         onLike: () => soundPlayerNotifier.like(),
         onPlayPause: () => soundPlayerNotifier.togglePlayPause(),
-        onQueue: () {},
         sound: soundPlayerState.sound,
         totalDuration: soundPlayerState.timerDuration,
       );
@@ -149,7 +148,7 @@ class ModeSoundsScreen extends ConsumerWidget {
                 child: MiniPlayer(
                   title: soundPlayerState.sound?.title ?? '',
                   artist: '',
-                  imageUrl: soundPlayerState.sound?.url_avatar ?? '',
+                  imageUrl: soundPlayerNotifier.googleDriveToDirect(soundPlayerState.sound?.url_avatar ?? ''),
                   isPlaying: soundPlayerState.isPlaying,
                   onPlayPause: () {
                     soundPlayerNotifier.togglePlayPause();

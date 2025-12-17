@@ -157,7 +157,6 @@ class _RecordingViewState extends ConsumerState<RecordingView> {
         onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
         onLike: () => ref.read(soundPlayerProvider.notifier).like(),
         onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
-        onQueue: () {},
         sound: ref.watch(soundPlayerProvider).sound,
         totalDuration: ref.watch(soundPlayerProvider).timerDuration,
       ):DarkScaffold(

@@ -40,7 +40,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onCollapse: () => ref.read(soundPlayerProvider.notifier).collapse(),
                 onLike: () => ref.read(soundPlayerProvider.notifier).like(),
                 onPlayPause: () => ref.read(soundPlayerProvider.notifier).togglePlayPause(),
-                onQueue: () {},
                 sound: soundPlayerState.sound,
                 totalDuration: soundPlayerState.timerDuration,
               ):
@@ -300,7 +299,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: MiniPlayer(
                   title: soundPlayerState.sound?.title ?? '',
                   artist: '',
-                  imageUrl: soundPlayerState.sound?.url_avatar ?? '',
+                  imageUrl: ref.read(soundPlayerProvider.notifier).googleDriveToDirect(soundPlayerState.sound?.url_avatar ?? ''),
                   isPlaying: soundPlayerState.isPlaying,
                   onPlayPause: () {
                     ref.read(soundPlayerProvider.notifier).togglePlayPause();

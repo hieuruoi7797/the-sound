@@ -5,10 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'features/user/viewmodels/user_view_model.dart';
 import 'core/routes/app_router.dart';
 import 'core/routes/route_names.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'core/config/image_cache_config.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/widgets/connectivity_listener.dart';
+import 'l10n/app_localizations.dart';
 
 // Define a top-level named handler for background messages
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -23,6 +24,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Configure image cache for better performance
+  ImageCacheConfig.configureImageCache();
 
   // Initialize Firebase
   await Firebase.initializeApp();
