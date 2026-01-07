@@ -2,6 +2,8 @@ import Flutter
 import UIKit
 import AVFoundation
 import Accelerate
+import Firebase
+import FirebaseMessaging
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
@@ -15,9 +17,19 @@ import Accelerate
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // Initialize Firebase first
+    FirebaseApp.configure()
+    
+    // Register Flutter plugins
     GeneratedPluginRegistrant.register(with: self)
 
-    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+    // Safely get the Flutter view controller
+    guard let controller = window?.rootViewController as? FlutterViewController else {
+      print("Error: Could not get FlutterViewController")
+      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+    
+    // Set up method channel for audio recording
     let channel = FlutterMethodChannel(name: "com.splat.mytune/recording",
                                       binaryMessenger: controller.binaryMessenger)
     self.methodChannel = channel
@@ -46,6 +58,15 @@ import Accelerate
     eventChannel.setStreamHandler(self)
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // MARK: - Push Notifications
+  override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    Messaging.messaging().apnsToken = deviceToken
+  }
+
+  override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+    print("Failed to register for remote notifications: \(error)")
   }
 
   // FlutterStreamHandler methods

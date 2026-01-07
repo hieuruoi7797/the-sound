@@ -59,6 +59,11 @@ class RecordingService {
   }
 
   Future<List<int>> getFrequenciesRage(int frequency) async {
+    if (!_databaseService.isInitialized) {
+      print('Database not initialized, cannot get frequency range');
+      return [];
+    }
+    
     try {
       final event = await _databaseService.readData("").first;
       final data = event.snapshot.value;
@@ -80,6 +85,11 @@ class RecordingService {
   }
 
   Future<String?> getFrequencyDescription(double frequency) async {
+    if (!_databaseService.isInitialized) {
+      print('Database not initialized, cannot get frequency description');
+      return null;
+    }
+    
     try {
       final event = await _databaseService.readData("").first;
       final data = event.snapshot.value;

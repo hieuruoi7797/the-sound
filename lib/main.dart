@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,8 +8,9 @@ import 'core/routes/app_router.dart';
 import 'core/routes/route_names.dart';
 import 'core/config/image_cache_config.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'core/widgets/connectivity_listener.dart';
+import 'core/utils/app_initializer.dart';
+import 'core/utils/firebase_test.dart';
 import 'l10n/app_localizations.dart';
 
 // Define a top-level named handler for background messages
@@ -18,81 +20,69 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // any Firebase services. Note: this is already called in your main function.
   // await Firebase.initializeApp();
 
-  print("Handling a background message: ${message.messageId}");
+  debugPrint("Handling a background message: ${message.messageId}");
   // Add your background message handling logic here
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Configure image cache for better performance
-  ImageCacheConfig.configureImageCache();
+  try {
+    // Configure image cache for better performance
+    ImageCacheConfig.configureImageCache();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
+    // Initialize Firebase Core
+    final firebaseInitialized = await AppInitializer.initializeFirebase();
+    
+    if (firebaseInitialized) {
+      // Set up background message handler
+      AppInitializer.setupBackgroundHandler(_firebaseMessagingBackgroundHandler);
 
-  // Set up background message handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      // Initialize Firebase Messaging service
+      await AppInitializer.initializeMessaging();
+    } else {
+      debugPrint("⚠️ Running app without Firebase features");
+    }
 
-  // Request notification permissions
-  NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
-  );
+    // Run Firebase setup test in debug mode
+    if (kDebugMode && firebaseInitialized) {
+      // Delay the test to allow Firebase to fully initialize
+      Future.delayed(const Duration(seconds: 3), () {
+        FirebaseTest.testFirebaseSetup();
+      });
+    }
 
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    print('User granted permission');
-    // Initialize Firebase Messaging for foreground notifications
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
+    final prefs = await SharedPreferences.getInstance();
+    
+    runApp(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+        child: const MyApp(),
+      ),
     );
-
-    // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('Got a message whilst in the foreground!');
-      print('Message data: ${message.data}');
-
-      if (message.notification != null) {
-        print('Message also contained a notification: ${message.notification}');
-      }
-      // Add your foreground message handling logic here
-    });
-
-    // Handle notification taps (when the app is opened from a terminated state or background)
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('A new onMessageOpenedApp event was published!');
-      print('Message data: ${message.data}');
-      // Add your logic to navigate or handle the notification tap here
-    });
-
-    // Get and print the FCM token
-    String? fcmToken = await FirebaseMessaging.instance.getToken();
-    print("FCM Token: $fcmToken");
-
-  } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-    print('User granted provisional permission');
-  } else {
-    print('User declined or has not accepted permission');
+  } catch (e, stackTrace) {
+    debugPrint("❌ Fatal error during app initialization: $e");
+    debugPrint("Stack trace: $stackTrace");
+    
+    // Try to run the app with minimal features
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      runApp(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: const MyApp(),
+        ),
+      );
+    } catch (fallbackError) {
+      debugPrint("❌ Fallback initialization also failed: $fallbackError");
+      // At this point, we can't recover
+      rethrow;
+    }
   }
-
-  
-  final prefs = await SharedPreferences.getInstance();
-  
-  runApp(
-    ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
-      child: const MyApp(),
-    ),
-  );
 }
 
 class MyApp extends StatelessWidget {

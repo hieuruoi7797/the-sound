@@ -50,6 +50,13 @@ class HomeViewModel extends StateNotifier<HomeState> {
     print('[HomeViewModel] Fetching sound data from root...');
     state = state.copyWith(isLoading: true, error: null);
     _topPicksSub?.cancel();
+    
+    if (!_dbService.isInitialized) {
+      print('[HomeViewModel] Database not initialized, using empty data');
+      state = state.copyWith(allSounds: [], isLoading: false, error: 'Database not available');
+      return;
+    }
+    
     _topPicksSub = _dbService.readData('').listen((event) {
       try {
         final data = event.snapshot.value;
