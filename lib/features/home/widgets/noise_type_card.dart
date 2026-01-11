@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mytune/core/widgets/optimized_avatar_image.dart';
 
 class NoiseTypeCard extends StatelessWidget {
   final String title;
@@ -42,17 +43,13 @@ class NoiseTypeCard extends StatelessWidget {
             } else if (lowerTitle.contains('pink')) {
               return SvgPicture.asset('assets/icons/pink_noise.svg', height: 24, width: 24);
             } else {
-              return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(100),
-                  image: DecorationImage(
-                    image: NetworkImage(icon),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(
-                      Colors.black.withOpacity(0.3),
-                      BlendMode.darken,
-                    ),
-                  ),
+              return OptimizedSquareImage(
+                imageUrl: icon,
+                size: 72,
+                borderRadius: BorderRadius.circular(100),
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.3),
+                  BlendMode.darken,
                 ),
               );
             }

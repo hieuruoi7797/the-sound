@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mytune/core/widgets/optimized_avatar_image.dart';
 
 class MiniPlayer extends StatelessWidget {
   final String title;
@@ -37,16 +38,10 @@ class MiniPlayer extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                image: DecorationImage(
-                  image: NetworkImage(imageUrl),
-                  fit: BoxFit.cover,
-                ),
-              ),
+            OptimizedSquareImage(
+              imageUrl: imageUrl,
+              size: 40,
+              borderRadius: BorderRadius.circular(8),
             ),
             const SizedBox(width: 12),
             Expanded(

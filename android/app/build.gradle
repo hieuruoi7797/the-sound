@@ -53,6 +53,18 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions "default"
+    productFlavors {
+        production {
+            dimension "default"
+            manifestPlaceholders = [appName: "MyTune"]
+        }
+        dev {
+            dimension "default"
+            manifestPlaceholders = [appName: "MyTune Dev"]
+        }
+    }
+
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"]

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mytune/features/navigator/widgets/dark_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
+import 'package:mytune/core/widgets/optimized_avatar_image.dart';
 import '../../home/widgets/scan_note_card.dart';
 import '../../sound_player/views/sound_player_ui.dart';
 import '../viewmodels/recording_view_model.dart';
@@ -554,17 +555,11 @@ class _RecommendedTunesList extends ConsumerWidget {
             onTap: () => ref.read(soundPlayerProvider.notifier).showPlayer(sound:tune),
             child: Padding(
               padding: const EdgeInsets.only(right: 16.0), // Spacing between items
-              child: Container(
-                width: 158.0,
-                height: 158.0,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.0),
-                  image: DecorationImage(
-                    image: NetworkImage(ref.read(soundPlayerProvider.notifier).googleDriveToDirect(tune.url_avatar)), // Use AssetImage for local assets
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: Stack(
+              child: OptimizedSquareImage(
+                imageUrl: ref.read(soundPlayerProvider.notifier).googleDriveToDirect(tune.url_avatar),
+                size: 158.0,
+                borderRadius: BorderRadius.circular(16.0),
+                overlay: Stack(
                   children: [
                     // Optional overlay for text readability
                     Container(
@@ -580,16 +575,20 @@ class _RecommendedTunesList extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    // Title text
                     Positioned(
-                      left: 12.0,
                       bottom: 12.0,
+                      left: 12.0,
+                      right: 12.0,
                       child: Text(
                         tune.title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: 14.0,
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

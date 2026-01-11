@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import '../core/config/app_config.dart';
 
 class RealtimeDatabaseService {
   late final FirebaseDatabase _database;
@@ -14,12 +15,12 @@ class RealtimeDatabaseService {
     try {
       _database = FirebaseDatabase.instanceFor(
         app: Firebase.app(), 
-        databaseURL: "https://my-tune-1ac48-default-rtdb.asia-southeast1.firebasedatabase.app"
+        databaseURL: AppConfig.databaseUrl
       );
       _database.setPersistenceEnabled(true);
       _database.setPersistenceCacheSizeBytes(10 * 1024 * 1024); // 10MB cache
       _isInitialized = true;
-      debugPrint("✅ RealtimeDatabaseService initialized successfully");
+      debugPrint("✅ RealtimeDatabaseService initialized successfully with ${AppConfig.environment.name} database: ${AppConfig.databaseUrl}");
     } catch (e) {
       debugPrint("❌ Failed to initialize RealtimeDatabaseService: $e");
       _isInitialized = false;

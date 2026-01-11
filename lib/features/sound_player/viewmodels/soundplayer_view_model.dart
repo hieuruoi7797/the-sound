@@ -543,6 +543,4 @@ class SoundPlayerViewModel extends StateNotifier<SoundPlayerState> {
     final recentsJson = prefs.getStringList(AppStrings.recentsKey) ?? [];
     return recentsJson.map((e) => SoundModel.fromJson(jsonDecode(e))).toList();
   }
-
-
 }

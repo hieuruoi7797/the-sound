@@ -7,6 +7,7 @@ import 'features/user/viewmodels/user_view_model.dart';
 import 'core/routes/app_router.dart';
 import 'core/routes/route_names.dart';
 import 'core/config/image_cache_config.dart';
+import 'core/config/app_config.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/widgets/connectivity_listener.dart';
 import 'core/utils/app_initializer.dart';
@@ -91,7 +92,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'The Sound',
+      title: AppConfig.appName,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
@@ -118,7 +119,34 @@ class MyApp extends StatelessWidget {
       initialRoute: RouteNames.home,
       onGenerateRoute: AppRouter.generateRoute,
       builder: (context, child) {
-        return ConnectivityListener(child: child!);
+        return ConnectivityListener(
+          child: Stack(
+            children: [
+              child!,
+              // Show environment indicator in debug mode
+              if (kDebugMode && AppConfig.isDev)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 10,
+                  right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'DEV',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
       },
     );
   }

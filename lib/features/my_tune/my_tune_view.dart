@@ -5,6 +5,7 @@ import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.d
 import 'package:mytune/features/sound_player/views/sound_player_ui.dart';
 import 'package:mytune/features/home/widgets/mini_player.dart';
 import 'package:mytune/features/my_tune/my_tune_view_model.dart';
+import 'package:mytune/core/widgets/optimized_avatar_image.dart';
 
 class MyTuneView extends ConsumerStatefulWidget {
   const MyTuneView({super.key});
@@ -148,15 +149,11 @@ class _MyTuneViewState extends ConsumerState<MyTuneView> with SingleTickerProvid
             onTap: () {
               ref.read(soundPlayerProvider.notifier).showPlayer(sound: sound);
             },
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                image: DecorationImage(
-                  image: NetworkImage(sound.url_avatar),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Stack(
+            child: OptimizedSquareImage(
+              imageUrl: sound.url_avatar,
+              size: (MediaQuery.of(context).size.width * 0.4),
+              borderRadius: BorderRadius.circular(10),
+              overlay: Stack(
                 children: [
                   Positioned.fill(
                     child: Container(

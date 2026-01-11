@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mytune/data/realtime_database_service.dart';
 import 'package:mytune/features/sound_player/models/sound_model.dart';
+import 'package:mytune/core/services/image_preloader_service.dart';
+import 'package:mytune/core/config/app_config.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class HomeState {
@@ -44,10 +47,13 @@ class HomeViewModel extends StateNotifier<HomeState> {
   final RealtimeDatabaseService _dbService = RealtimeDatabaseService();
   StreamSubscription<DatabaseEvent>? _topPicksSub;
 
-  HomeViewModel() : super(HomeState()) {}
+  HomeViewModel() : super(HomeState());
 
   void fetchSoundData() {
     print('[HomeViewModel] Fetching sound data from root...');
+    print('[HomeViewModel] Using database URL: ${AppConfig.databaseUrl}');
+    print('[HomeViewModel] Environment: ${AppConfig.environment.name}');
+    
     state = state.copyWith(isLoading: true, error: null);
     _topPicksSub?.cancel();
     
@@ -79,7 +85,18 @@ class HomeViewModel extends StateNotifier<HomeState> {
       }
     }, onError: (e) {
       print('[HomeViewModel] Error fetching data: $e');
-      state = state.copyWith(isLoading: false, error: e.toString());
+      
+      // Provide more specific error messages
+      String errorMessage = e.toString();
+      if (errorMessage.contains('permission-denied')) {
+        if (AppConfig.isDev) {
+          errorMessage = 'Dev database not accessible. Please:\n1. Import data to dev database\n2. Check Firebase security rules\n3. Verify database URL: ${AppConfig.databaseUrl}';
+        } else {
+          errorMessage = 'Permission denied. Check Firebase security rules.';
+        }
+      }
+      
+      state = state.copyWith(isLoading: false, error: errorMessage);
     });
   }
 
@@ -109,6 +126,47 @@ class HomeViewModel extends StateNotifier<HomeState> {
       topPicksAll: topPicksAll,
     );
     print('[HomeViewModel] Top picks made: ${topPicks.length} from ${topPicksAll.length} total sounds');
+  }
+
+  /// Preload images for sounds in a specific category
+  Future<void> preloadCategoryImages(int tag, BuildContext context) async {
+    List<SoundModel> sounds;
+    switch (tag) {
+      case 202:
+        sounds = sleepSounds;
+        break;
+      case 303:
+        sounds = relaxSounds;
+        break;
+      case 404:
+        sounds = meditateSounds;
+        break;
+      case 505:
+        sounds = deepworkSounds;
+        break;
+      case 606:
+        sounds = energyBoostSounds;
+        break;
+      case 707:
+        sounds = stressReliefSounds;
+        break;
+      case 808:
+        sounds = healingBodySounds;
+        break;
+      default:
+        sounds = topPicksAll;
+    }
+    
+    if (sounds.isNotEmpty) {
+      final imageUrls = sounds
+          .where((sound) => sound.url_avatar.isNotEmpty)
+          .map((sound) => sound.url_avatar)
+          .toList();
+      
+      if (imageUrls.isNotEmpty) {
+        await ImagePreloaderService().preloadImages(imageUrls, context);
+      }
+    }
   }
 }
 
@@ -147,4 +205,4 @@ class SystemSoundsModel {
       'system_sounds': sounds.map((e) => e.toJson()).toList(),
     };
   }
-} 
+}

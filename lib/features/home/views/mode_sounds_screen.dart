@@ -4,6 +4,7 @@ import 'package:mytune/features/sound_player/models/sound_model.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
 import 'package:mytune/features/sound_player/views/sound_player_ui.dart';
 import 'package:mytune/features/home/widgets/mini_player.dart';
+import 'package:mytune/core/widgets/optimized_avatar_image.dart';
 import '../viewmodels/home_view_model.dart';
 
 class ModeSoundsScreen extends ConsumerWidget {
@@ -96,15 +97,11 @@ class ModeSoundsScreen extends ConsumerWidget {
                         sound: sound,
                       );
                     },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        image: DecorationImage(
-                          image: NetworkImage(soundPlayerNotifier.googleDriveToDirect(sound.url_avatar)),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      child: Stack(
+                    child: OptimizedSquareImage(
+                      imageUrl: soundPlayerNotifier.googleDriveToDirect(sound.url_avatar),
+                      size: (MediaQuery.of(context).size.width * 0.4),
+                      borderRadius: BorderRadius.circular(10),
+                      overlay: Stack(
                         children: [
                           Positioned.fill(
                             child: Container(
