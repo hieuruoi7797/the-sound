@@ -276,8 +276,8 @@ class OptimizedSquareImage extends StatelessWidget {
               colorFilter: colorFilter ?? const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
               child: CachedNetworkImage(
                 imageUrl: imageUrl,
-                width: size,
-                height: size,
+                // width: size,
+                // height: size,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => placeholder ??
                   Container(

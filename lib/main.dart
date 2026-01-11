@@ -8,6 +8,7 @@ import 'core/routes/app_router.dart';
 import 'core/routes/route_names.dart';
 import 'core/config/image_cache_config.dart';
 import 'core/config/app_config.dart';
+import 'core/services/cache_management_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/widgets/connectivity_listener.dart';
 import 'core/utils/app_initializer.dart';
@@ -31,6 +32,9 @@ void main() async {
   try {
     // Configure image cache for better performance
     ImageCacheConfig.configureImageCache();
+
+    // Check and clear cache if environment changed
+    await CacheManagementService.checkAndClearCacheIfNeeded();
 
     // Initialize Firebase Core
     final firebaseInitialized = await AppInitializer.initializeFirebase();

@@ -5,6 +5,8 @@ import 'package:mytune/data/realtime_database_service.dart';
 import 'package:mytune/features/sound_player/models/sound_model.dart';
 import 'package:mytune/core/services/image_preloader_service.dart';
 import 'package:mytune/core/config/app_config.dart';
+import 'package:mytune/core/services/cache_management_service.dart';
+import 'package:mytune/features/my_tune/my_tune_view_model.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class HomeState {
@@ -40,14 +42,15 @@ class HomeState {
 }
 
 final homeViewModelProvider = StateNotifierProvider<HomeViewModel, HomeState>((ref) {
-  return HomeViewModel();
+  return HomeViewModel(ref);
 });
 
 class HomeViewModel extends StateNotifier<HomeState> {
   final RealtimeDatabaseService _dbService = RealtimeDatabaseService();
+  final Ref _ref;
   StreamSubscription<DatabaseEvent>? _topPicksSub;
 
-  HomeViewModel() : super(HomeState());
+  HomeViewModel(this._ref) : super(HomeState());
 
   void fetchSoundData() {
     print('[HomeViewModel] Fetching sound data from root...');
@@ -71,6 +74,13 @@ class HomeViewModel extends StateNotifier<HomeState> {
         if (data is Map) {
           final systemSounds = SystemSoundsModel.fromJson(Map<String, dynamic>.from(data));
           print('[HomeViewModel] Parsed ${systemSounds.sounds.length} sounds from SystemSoundsModel');
+          
+          // Check if avatar URLs have changed and clear cache if needed
+          _checkAndUpdateImageCache(systemSounds.sounds);
+          
+          // Sync local data (recents and favorites) with new database data
+          _syncLocalDataWithDatabase(systemSounds.sounds);
+          
           state = state.copyWith(allSounds: systemSounds.sounds, isLoading: false, error: null);
           makeTopPicks();
         } else {
@@ -98,6 +108,41 @@ class HomeViewModel extends StateNotifier<HomeState> {
       
       state = state.copyWith(isLoading: false, error: errorMessage);
     });
+  }
+
+  /// Sync local data (recents and favorites) with database
+  void _syncLocalDataWithDatabase(List<SoundModel> databaseSounds) {
+    // Sync recents
+    _ref.read(myTuneRecentsViewModelProvider.notifier).syncRecentsWithDatabase(databaseSounds);
+    
+    // Sync favorites
+    _ref.read(myTuneViewModelProvider.notifier).syncFavoritesWithDatabase(databaseSounds);
+  }
+
+  /// Check if avatar URLs have changed and clear cache if needed
+  void _checkAndUpdateImageCache(List<SoundModel> newSounds) {
+    // Create a simple hash of all avatar URLs to detect changes
+    final newAvatarUrls = newSounds.map((s) => s.url_avatar).join('|');
+    final newHash = newAvatarUrls.hashCode.toString();
+    
+    // Check data version and clear cache if changed
+    CacheManagementService.checkDataVersionAndClearCache(newHash);
+  }
+
+  /// Force refresh all cached images
+  Future<void> refreshImageCache() async {
+    print('[HomeViewModel] Force refreshing image cache...');
+    await CacheManagementService.forceRefreshCache();
+    print('[HomeViewModel] Image cache refreshed');
+  }
+
+  /// Force sync local data with current database data
+  Future<void> syncLocalData() async {
+    if (state.allSounds.isNotEmpty) {
+      print('[HomeViewModel] Syncing local data with database...');
+      _syncLocalDataWithDatabase(state.allSounds);
+      print('[HomeViewModel] Local data synced');
+    }
   }
 
   @override

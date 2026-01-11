@@ -9,6 +9,7 @@ class Assets {
   static const String energy_boost = 'assets/images/energy_boost.svg';
   static const String meditate = 'assets/images/meditate.svg';
   static const String body_healing = 'assets/images/body_healing.svg';
+  static const String mytune = 'assets/icons/mytune.svg';
 
 
 } 
