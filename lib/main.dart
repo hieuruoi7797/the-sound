@@ -36,6 +36,9 @@ void main() async {
     final firebaseInitialized = await AppInitializer.initializeFirebase();
     
     if (firebaseInitialized) {
+      // Initialize Crashlytics FIRST (before other services)
+      await AppInitializer.initializeCrashlytics();
+      
       // Set up background message handler
       AppInitializer.setupBackgroundHandler(_firebaseMessagingBackgroundHandler);
 
