@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "170810569354",
+    "firebase_url": "https://my-tune-1ac48-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "my-tune-1ac48",
     "storage_bucket": "my-tune-1ac48.firebasestorage.app"
   },
@@ -10,6 +11,26 @@
         "mobilesdk_app_id": "1:170810569354:android:8f24a5a4349bc8a4bd7373",
         "android_client_info": {
           "package_name": "com.splat.mytune"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsmpteDA0mIheBtLqo5NrNMi9geqVxR6o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      },
+      "admob_app_id": "ca-app-pub-6074610071188617~9446349754"
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:170810569354:android:8a5831f31b73762bbd7373",
+        "android_client_info": {
+          "package_name": "com.splat.mytune.dev"
         }
       },
       "oauth_client": [],
