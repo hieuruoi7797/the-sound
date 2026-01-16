@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mytune/core/constants/assets.dart';
 import 'package:mytune/features/sound_player/models/sound_model.dart';
 import 'package:mytune/features/sound_player/views/sound_player_ui.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
+import 'package:mytune/features/my_tune/my_tune_view.dart';
+import 'package:mytune/core/widgets/debug_cache_panel.dart';
 import '../widgets/environment_scan_banner.dart';
 import '../widgets/noise_type_card.dart';
 import '../widgets/daily_mode_card.dart';
@@ -57,7 +61,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // const SizedBox(),
                       Container(
                         margin: const EdgeInsets.only(top: 16),
                         child: const Text(
@@ -69,24 +72,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(),
-                      // IconButton(
-                      //   onPressed: () {
-                      //     // Navigate to Profile/Settings
-                      //   },
-                      //   icon: Container(
-                      //     padding: const EdgeInsets.all(8),
-                      //     decoration: BoxDecoration(
-                      //       color: Colors.white.withOpacity(0.1),
-                      //       shape: BoxShape.circle,
-                      //     ),
-                      //     child: const Icon(
-                      //       Icons.person,
-                      //       color: Colors.white,
-                      //       size: 20,
-                      //     ),
-                      //   ),
-                      // ),
+                      Row(
+                        children: [
+                          // Refresh button (only show in debug mode)
+                          if (kDebugMode)
+                            Container(
+                              margin: const EdgeInsets.only(top: 16, right: 8),
+                              child: IconButton(
+                                onPressed: () async {
+                                  // Show loading indicator
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Refreshing image cache...'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                  
+                                  // Refresh cache and refetch data
+                                  await ref.read(homeViewModelProvider.notifier).refreshImageCache();
+                                  ref.read(homeViewModelProvider.notifier).fetchSoundData();
+                                  
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Cache refreshed!'),
+                                        duration: Duration(seconds: 1),
+                                      ),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(
+                                  Icons.refresh,
+                                  color: Colors.white70,
+                                  size: 24,
+                                ),
+                                tooltip: 'Refresh Cache',
+                              ),
+                            ),
+                          Container(
+                            margin: const EdgeInsets.only(top: 16),
+                            child: IconButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const MyTuneView(),
+                                  ),
+                                );
+                              },
+                              icon: SvgPicture.asset(
+                                Assets.mytune,
+                                width: 32,
+                                height: 32,
+                                colorFilter: const ColorFilter.mode(
+                                  Colors.white,
+                                  BlendMode.srcIn,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),

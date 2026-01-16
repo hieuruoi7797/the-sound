@@ -7,6 +7,7 @@ import 'package:mytune/core/widgets/optimized_avatar_image.dart';
 import '../../home/widgets/scan_note_card.dart';
 import '../../sound_player/views/sound_player_ui.dart';
 import '../viewmodels/recording_view_model.dart';
+import 'package:lottie/lottie.dart';
 import 'dart:async';
 
 class RecordingView extends ConsumerStatefulWidget {
@@ -303,17 +304,69 @@ class _ScanButton extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // Lottie animation for scanning state - CLEAN VERSION
+          if (isScanning)
+            SizedBox(
+              width: buttonSize * 1.5,
+              height: buttonSize * 1.5,
+              child: ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  Colors.white.withOpacity(0.8),
+                  BlendMode.srcIn,
+                ),
+                child: Transform.scale(
+                  scale: 1.2, // Make it slightly larger
+                  child: Lottie.asset(
+                    'assets/lotties/waves.json',
+                    fit: BoxFit.contain,
+                    repeat: true,
+                    animate: true,
+                    onLoaded: (composition) {
+                      print('Lottie loaded: ${composition.duration}, ${composition.bounds}');
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Lottie error: $error');
+                      return Container(
+                        color: Colors.yellow,
+                        child: Center(child: Text('Lottie Error', style: TextStyle(color: Colors.black))),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          // Scanning state glow border effect
+          if (isScanning)
+            Container(
+              width: buttonSize * 1.02, // Reduced from 1.1 to make glow closer to button
+              height: buttonSize * 1.02,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.2), // Reduced opacity from 0.3
+                    blurRadius: 8, // Reduced from 20 for sharper glow
+                    spreadRadius: 0, // Reduced from 1 for thinner spread
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.05), // Reduced opacity from 0.1
+                    blurRadius: 20, // Reduced from 40 for less blur
+                    spreadRadius: 1, // Kept at 1 for subtle outer glow
+                  ),
+                ],
+              ),
+            ),
+          // Glow effect for completed scan
           if (glowColor != null)
             Container(
-              width: buttonSize , // slightly larger for glow
-              height: buttonSize ,
+              width: buttonSize,
+              height: buttonSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
                     color: glowColor.withOpacity(0.55),
                     blurRadius: buttonSize * 0.32,
-                    // spreadRadius: buttonSize * 0.0001,
                   ),
                   BoxShadow(
                     color: glowColor.withOpacity(0.3),
@@ -323,22 +376,33 @@ class _ScanButton extends StatelessWidget {
                 ],
               ),
             ),
+          // Main button container
           Container(
             width: buttonSize,
             height: buttonSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              // color: Colors.white.withOpacity(0.08),
-              gradient: const LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  Color(0xFF2E2B3C),
-                  Color(0xFF131219),
-                ],
-              ),
+              gradient: isScanning 
+                ? const RadialGradient(
+                    center: Alignment(0, 0.03), // Slightly offset center to match CSS
+                    radius: 0.89, // 88.96% radius
+                    colors: [
+                      Color(0xFF2E2B3C), // #2E2B3C at 0%
+                      Color(0xFF131219), // #131219 at 100%
+                    ],
+                  )
+                : const LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Color(0xFF2E2B3C),
+                      Color(0xFF131219),
+                    ],
+                  ),
               border: Border.all(
-                color: const Color(0x1AFFFFFF),
+                color: isScanning 
+                  ? const Color(0x33FFFFFF) // rgba(255, 255, 255, 0.2) for scanning
+                  : const Color(0x1AFFFFFF), // Original border for non-scanning
                 width: 1.71,
               ),
             ),

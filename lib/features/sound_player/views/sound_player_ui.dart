@@ -33,7 +33,7 @@ class SoundPlayerUI extends ConsumerWidget {
     final soundPlayerNotifier = ref.read(soundPlayerProvider.notifier);
     final state = ref.watch(soundPlayerProvider);
     return Scaffold(
-      backgroundColor: const Color(0xFF5C576A),
+      backgroundColor: const Color(0xFF141318),
       body: SafeArea(
         child: Stack(
           children: [
@@ -49,7 +49,7 @@ class SoundPlayerUI extends ConsumerWidget {
                   children: [
                     // Collapse button
                     CircleAvatar(
-                      backgroundColor: Colors.black.withOpacity(0.2),
+                      backgroundColor: const Color(0xFFA29CC9).withOpacity(0.16),
                       child: IconButton(
                         icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
                         onPressed: onCollapse,
@@ -57,7 +57,7 @@ class SoundPlayerUI extends ConsumerWidget {
                     ),
                     // Like button
                     CircleAvatar(
-                      backgroundColor: Colors.black.withOpacity(0.2),
+                      backgroundColor: const Color(0xFFA29CC9).withOpacity(0.16),
                       child: IconButton(
                         icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border, color: Colors.white),
                         onPressed: onLike,
@@ -85,16 +85,7 @@ class SoundPlayerUI extends ConsumerWidget {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                // Description
-                if (sound?.description.isNotEmpty ?? false)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                    child: Text(
-                      sound?.description ?? '',
-                      style: const TextStyle(color: Colors.white70, fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.071),
                 // Circular avatar with optimized loading
                 Stack(
                   alignment: Alignment.center,
@@ -126,6 +117,22 @@ class SoundPlayerUI extends ConsumerWidget {
                     //   ),
                   ],
                 ),
+                const SizedBox(height: 50),
+                // Description
+                if (sound?.description.isNotEmpty ?? false)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFA29CC9).withOpacity(0.16),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      sound?.description ?? '',
+                      style: const TextStyle(color: Colors.white70, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 const SizedBox(height: 40),
                 // Progress bar
                 // Padding(
@@ -154,27 +161,51 @@ class SoundPlayerUI extends ConsumerWidget {
                 // Controller row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _circleButton(
-                      icon: Icons.timer,
-                      ref: ref,
-                      onTap: () {
-                        !(state.isLoading)?
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (BuildContext context) {
-                            return const TimerSettingView();
+                    // Timer button with countdown below
+                    Column(
+                      children: [
+                        _circleButton(
+                          icon: Icons.timer,
+                          ref: ref,
+                          onTap: () {
+                            !(state.isLoading)?
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (BuildContext context) {
+                                return const TimerSettingView();
+                              },
+                            ):null;
+                            // Call the original onTimer callback if needed
+                            // onTimer.call();
                           },
-                        ):null;
-                        // Call the original onTimer callback if needed
-                        // onTimer.call();
-                      },
+                        ),
+                        const SizedBox(height: 8),
+                        // Countdown timer display
+                        Text(
+                          _formatDuration(totalDuration - currentTime),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
                     ),
-                    _circleButton(
-                        icon: isPlaying ? Icons.pause : Icons.play_arrow,
-                        onTap: !(state.isLoading) ? onPlayPause : () {},
-                        ref: ref),
+                    // Play/Pause button with spacer to align with timer icon
+                    Column(
+                      children: [
+                        _circleButton(
+                            icon: isPlaying ? Icons.pause : Icons.play_arrow,
+                            onTap: !(state.isLoading) ? onPlayPause : () {},
+                            ref: ref),
+                        const SizedBox(height: 8),
+                        // Empty space to match timer text height
+                        const SizedBox(height: 20), // Approximate height of timer text
+                      ],
+                    ),
                   ],
                 ),
                 const Spacer(),
@@ -195,7 +226,7 @@ class SoundPlayerUI extends ConsumerWidget {
         height: 64,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.black.withOpacity(0.2),
+          color: const Color(0xFFA29CC9).withOpacity(0.16),
         ),
         child: Icon(icon, color: (ref?.watch(soundPlayerProvider).isLoading == true)? Colors.black12:Colors.white, size: 32),
       ),

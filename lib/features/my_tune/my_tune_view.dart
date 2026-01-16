@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mytune/features/sound_player/models/sound_model.dart';
 import 'package:mytune/features/sound_player/viewmodels/soundplayer_view_model.dart';
 import 'package:mytune/features/sound_player/views/sound_player_ui.dart';
 import 'package:mytune/features/home/widgets/mini_player.dart';
 import 'package:mytune/features/my_tune/my_tune_view_model.dart';
+import 'package:mytune/features/home/viewmodels/home_view_model.dart';
 import 'package:mytune/core/widgets/optimized_avatar_image.dart';
 
 class MyTuneView extends ConsumerStatefulWidget {
@@ -72,6 +74,45 @@ class _MyTuneViewState extends ConsumerState<MyTuneView> with SingleTickerProvid
               fontWeight: FontWeight.bold,
             ),
           ),
+          actions: [
+            // Refresh button (only show in debug mode)
+            if (kDebugMode)
+              IconButton(
+                onPressed: () async {
+                  // Show loading indicator
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Syncing local data...'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                  
+                  // Sync local data with database
+                  await ref.read(homeViewModelProvider.notifier).syncLocalData();
+                  
+                  // Refresh the current tab
+                  if (_tabController.index == 0) {
+                    ref.read(myTuneRecentsViewModelProvider.notifier).refreshRecents();
+                  } else {
+                    ref.read(myTuneViewModelProvider.notifier).refreshFavorites();
+                  }
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Local data synced!'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(
+                  Icons.sync,
+                  color: Colors.white70,
+                ),
+                tooltip: 'Sync Local Data',
+              ),
+          ],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(kToolbarHeight + 16),
             child: Padding(
@@ -140,17 +181,18 @@ class _MyTuneViewState extends ConsumerState<MyTuneView> with SingleTickerProvid
           crossAxisCount: 2,
           crossAxisSpacing: 16.0,
           mainAxisSpacing: 16.0,
-          childAspectRatio: (MediaQuery.of(context).size.width * 0.4) / (MediaQuery.of(context).size.height * 0.22),
+          childAspectRatio: (MediaQuery.of(context).size.width * 0.4) / (MediaQuery.of(context).size.width * 0.4),
         ),
         itemCount: sounds.length,
         itemBuilder: (context, index) {
           final sound = sounds[index];
+          final soundPlayerNotifier = ref.read(soundPlayerProvider.notifier);
           return GestureDetector(
             onTap: () {
               ref.read(soundPlayerProvider.notifier).showPlayer(sound: sound);
             },
             child: OptimizedSquareImage(
-              imageUrl: sound.url_avatar,
+              imageUrl: soundPlayerNotifier.googleDriveToDirect(sound.url_avatar),
               size: (MediaQuery.of(context).size.width * 0.4),
               borderRadius: BorderRadius.circular(10),
               overlay: Stack(

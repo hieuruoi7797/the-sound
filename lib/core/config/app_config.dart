@@ -5,6 +5,7 @@ enum Environment {
 
 class AppConfig {
   static Environment _environment = Environment.production;
+  static const String _environmentKey = 'app_environment';
   
   static Environment get environment => _environment;
   
@@ -34,4 +35,7 @@ class AppConfig {
   
   static bool get isProduction => _environment == Environment.production;
   static bool get isDev => _environment == Environment.dev;
+  
+  /// Get environment key for cache invalidation
+  static String get environmentKey => _environment.name;
 }

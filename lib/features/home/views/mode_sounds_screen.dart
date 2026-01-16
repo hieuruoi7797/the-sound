@@ -86,7 +86,7 @@ class ModeSoundsScreen extends ConsumerWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 16.0,
                   mainAxisSpacing: 16.0,
-                  childAspectRatio: (MediaQuery.of(context).size.width * 0.4) / (MediaQuery.of(context).size.height * 0.22),
+                  childAspectRatio: (MediaQuery.of(context).size.width * 0.4) / (MediaQuery.of(context).size.width * 0.4),
                 ),
                 itemCount: sounds.length,
                 itemBuilder: (context, index) {
